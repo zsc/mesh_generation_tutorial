@@ -6,22 +6,37 @@
 
 ### 13.1.1 前向扩散过程
 
-扩散模型的核心思想源于非平衡热力学，通过定义一个逐步破坏数据结构的马尔可夫链，将复杂的数据分布转换为简单的高斯分布。
+扩散模型的核心思想源于非平衡热力学，通过定义一个逐步破坏数据结构的马尔可夫链，将复杂的数据分布转换为简单的高斯分布。这个过程模拟了物理世界中的布朗运动，粒子从有序状态逐渐扩散到无序状态。
 
 对于3D网格顶点坐标 $\mathbf{x}_0 \in \mathbb{R}^{N \times 3}$，前向扩散过程定义为：
 
 $$q(\mathbf{x}_t|\mathbf{x}_{t-1}) = \mathcal{N}(\mathbf{x}_t; \sqrt{1-\beta_t}\mathbf{x}_{t-1}, \beta_t\mathbf{I})$$
 
-其中 $\beta_t \in (0,1)$ 控制第 $t$ 步的噪声强度。通过递推关系，可以推导出从 $\mathbf{x}_0$ 直接到 $\mathbf{x}_t$ 的边际分布：
+其中 $\beta_t \in (0,1)$ 控制第 $t$ 步的噪声强度，通常满足 $\beta_1 < \beta_2 < ... < \beta_T$，保证信息逐渐丢失。整个前向过程形成马尔可夫链：
+
+$$q(\mathbf{x}_{1:T}|\mathbf{x}_0) = \prod_{t=1}^{T} q(\mathbf{x}_t|\mathbf{x}_{t-1})$$
+
+通过递推关系，可以推导出从 $\mathbf{x}_0$ 直接到 $\mathbf{x}_t$ 的边际分布。令 $\alpha_t = 1-\beta_t$，$\bar{\alpha}_t = \prod_{s=1}^{t}\alpha_s$，则有：
 
 $$q(\mathbf{x}_t|\mathbf{x}_0) = \mathcal{N}(\mathbf{x}_t; \sqrt{\bar{\alpha}_t}\mathbf{x}_0, (1-\bar{\alpha}_t)\mathbf{I})$$
 
-其中 $\alpha_t = 1-\beta_t$，$\bar{\alpha}_t = \prod_{s=1}^{t}\alpha_s$。
+**推导过程**：利用高斯分布的可加性，从 $\mathbf{x}_0$ 到 $\mathbf{x}_1$：
+$$\mathbf{x}_1 = \sqrt{\alpha_1}\mathbf{x}_0 + \sqrt{1-\alpha_1}\boldsymbol{\epsilon}_1$$
 
-重参数化形式：
+从 $\mathbf{x}_1$ 到 $\mathbf{x}_2$：
+$$\mathbf{x}_2 = \sqrt{\alpha_2}\mathbf{x}_1 + \sqrt{1-\alpha_2}\boldsymbol{\epsilon}_2 = \sqrt{\alpha_2\alpha_1}\mathbf{x}_0 + \sqrt{\alpha_2(1-\alpha_1)}\boldsymbol{\epsilon}_1 + \sqrt{1-\alpha_2}\boldsymbol{\epsilon}_2$$
+
+由于 $\boldsymbol{\epsilon}_1$ 和 $\boldsymbol{\epsilon}_2$ 独立，合并后的噪声仍为高斯分布，方差为：
+$$\alpha_2(1-\alpha_1) + (1-\alpha_2) = 1 - \alpha_2\alpha_1 = 1 - \bar{\alpha}_2$$
+
+重参数化形式提供了高效的采样方式：
 $$\mathbf{x}_t = \sqrt{\bar{\alpha}_t}\mathbf{x}_0 + \sqrt{1-\bar{\alpha}_t}\boldsymbol{\epsilon}, \quad \boldsymbol{\epsilon} \sim \mathcal{N}(0, \mathbf{I})$$
 
-这个性质使得我们可以在任意时间步直接采样，无需递归计算，大大提高了训练效率。
+这个性质使得我们可以在任意时间步直接采样，无需递归计算，大大提高了训练效率。对于3D网格，这意味着每个顶点独立地添加噪声，但噪声强度在全局保持一致。
+
+**信噪比分析**：定义信噪比 $\text{SNR}(t) = \bar{\alpha}_t / (1-\bar{\alpha}_t)$，随着 $t$ 增加，SNR单调递减：
+- $t=0$: $\text{SNR}(0) = \infty$（纯信号）
+- $t=T$: $\text{SNR}(T) \approx 0$（纯噪声）
 
 ```
 扩散过程可视化:
@@ -30,78 +45,333 @@ t=0      t=T/4     t=T/2     t=3T/4    t=T
 ╱──╲     ╱ · ╲     · · ·     · · ·    · · ·
 ────     · · ·     · · · ·   · · · ·  · · · ·
 结构清晰  轮廓模糊  形状消失  接近噪声  纯高斯噪声
+SNR=∞    SNR≈10    SNR≈1     SNR≈0.1   SNR≈0
 ```
 
 ### 13.1.2 逆向去噪过程
 
-逆向过程通过参数化的神经网络学习条件分布：
+逆向过程是扩散模型的生成阶段，目标是从噪声 $\mathbf{x}_T \sim \mathcal{N}(0, \mathbf{I})$ 逐步恢复到原始数据分布 $p(\mathbf{x}_0)$。理论上，如果知道真实的后验分布 $q(\mathbf{x}_{t-1}|\mathbf{x}_t, \mathbf{x}_0)$，就可以完美逆转扩散过程。
 
-$$p_\theta(x_{t-1}|x_t) = \mathcal{N}(x_{t-1}; \mu_\theta(x_t, t), \Sigma_\theta(x_t, t))$$
+**后验分布的解析形式**：利用贝叶斯定理和高斯分布的性质，可以推导出：
 
-训练目标是最小化变分下界（ELBO）：
+$$q(\mathbf{x}_{t-1}|\mathbf{x}_t, \mathbf{x}_0) = \mathcal{N}(\mathbf{x}_{t-1}; \tilde{\mu}_t(\mathbf{x}_t, \mathbf{x}_0), \tilde{\beta}_t\mathbf{I})$$
 
-$$\mathcal{L} = \mathbb{E}_q \left[ \sum_{t>1} D_{KL}(q(x_{t-1}|x_t,x_0) || p_\theta(x_{t-1}|x_t)) + \log p_\theta(x_0|x_1) \right]$$
+其中均值和方差为：
+$$\tilde{\mu}_t(\mathbf{x}_t, \mathbf{x}_0) = \frac{\sqrt{\bar{\alpha}_{t-1}}\beta_t}{1-\bar{\alpha}_t}\mathbf{x}_0 + \frac{\sqrt{\alpha_t}(1-\bar{\alpha}_{t-1})}{1-\bar{\alpha}_t}\mathbf{x}_t$$
+
+$$\tilde{\beta}_t = \frac{1-\bar{\alpha}_{t-1}}{1-\bar{\alpha}_t} \cdot \beta_t$$
+
+实际中，我们无法访问 $\mathbf{x}_0$，因此通过参数化的神经网络学习逆向分布：
+
+$$p_\theta(\mathbf{x}_{t-1}|\mathbf{x}_t) = \mathcal{N}(\mathbf{x}_{t-1}; \mu_\theta(\mathbf{x}_t, t), \Sigma_\theta(\mathbf{x}_t, t))$$
+
+**变分下界（ELBO）**：训练目标是最大化对数似然的下界：
+
+$$\log p(\mathbf{x}_0) \geq \mathbb{E}_q \left[ \log p(\mathbf{x}_T) - \sum_{t=1}^{T} D_{KL}(q(\mathbf{x}_{t-1}|\mathbf{x}_t,\mathbf{x}_0) || p_\theta(\mathbf{x}_{t-1}|\mathbf{x}_t)) \right]$$
+
+将损失函数分解为三部分：
+$$\mathcal{L} = \underbrace{D_{KL}(q(\mathbf{x}_T|\mathbf{x}_0) || p(\mathbf{x}_T))}_{L_T} + \sum_{t>1} \underbrace{D_{KL}(q(\mathbf{x}_{t-1}|\mathbf{x}_t,\mathbf{x}_0) || p_\theta(\mathbf{x}_{t-1}|\mathbf{x}_t))}_{L_{t-1}} - \underbrace{\log p_\theta(\mathbf{x}_0|\mathbf{x}_1)}_{L_0}$$
+
+其中 $L_T$ 在扩散过程充分长时接近零（$\mathbf{x}_T$ 接近标准高斯），$L_0$ 是重建项，$L_{t-1}$ 是去噪匹配项。
 
 ### 13.1.3 噪声预测参数化
 
-实践中，通常采用噪声预测的参数化方式。神经网络 $\epsilon_\theta(x_t, t)$ 预测添加的噪声：
+Ho等人(2020)提出了一个关键洞察：与其直接预测 $\mu_\theta$，不如让网络预测添加的噪声 $\epsilon$，这大大简化了训练过程。
 
-$$\mu_\theta(x_t, t) = \frac{1}{\sqrt{\alpha_t}}\left(x_t - \frac{\beta_t}{\sqrt{1-\bar{\alpha}_t}}\epsilon_\theta(x_t, t)\right)$$
+**参数化选择**：由于 $\mathbf{x}_t = \sqrt{\bar{\alpha}_t}\mathbf{x}_0 + \sqrt{1-\bar{\alpha}_t}\epsilon$，可以表示：
+$$\mathbf{x}_0 = \frac{1}{\sqrt{\bar{\alpha}_t}}(\mathbf{x}_t - \sqrt{1-\bar{\alpha}_t}\epsilon)$$
 
-训练损失简化为：
+将此代入后验均值公式：
+$$\mu_\theta(\mathbf{x}_t, t) = \frac{1}{\sqrt{\alpha_t}}\left(\mathbf{x}_t - \frac{\beta_t}{\sqrt{1-\bar{\alpha}_t}}\epsilon_\theta(\mathbf{x}_t, t)\right)$$
 
-$$\mathcal{L}_{simple} = \mathbb{E}_{t,x_0,\epsilon} \left[ ||\epsilon - \epsilon_\theta(x_t, t)||^2 \right]$$
+其中 $\epsilon_\theta(\mathbf{x}_t, t)$ 是神经网络，预测在时间步 $t$ 添加到 $\mathbf{x}_0$ 的噪声。
 
-其中 $\epsilon \sim \mathcal{N}(0, I)$，$x_t = \sqrt{\bar{\alpha}_t}x_0 + \sqrt{1-\bar{\alpha}_t}\epsilon$。
+**简化的训练损失**：通过重参数化技巧，KL散度可以简化为：
+
+$$\mathcal{L}_{simple} = \mathbb{E}_{t \sim \mathcal{U}(1,T), \mathbf{x}_0, \epsilon} \left[ ||\epsilon - \epsilon_\theta(\mathbf{x}_t, t)||^2 \right]$$
+
+训练算法极其简洁：
+1. 采样时间步：$t \sim \text{Uniform}(1, T)$
+2. 采样噪声：$\epsilon \sim \mathcal{N}(0, \mathbf{I})$
+3. 构造噪声样本：$\mathbf{x}_t = \sqrt{\bar{\alpha}_t}\mathbf{x}_0 + \sqrt{1-\bar{\alpha}_t}\epsilon$
+4. 优化损失：$||\epsilon - \epsilon_\theta(\mathbf{x}_t, t)||^2$
+
+**方差的处理**：对于方差 $\Sigma_\theta(\mathbf{x}_t, t)$，常见做法：
+- 固定为 $\tilde{\beta}_t\mathbf{I}$（DDPM）
+- 固定为 $\beta_t\mathbf{I}$（简化版本）
+- 学习插值系数：$\Sigma_\theta = \exp(v_\theta \log \beta_t + (1-v_\theta) \log \tilde{\beta}_t)$
+
+**3D网格的特殊考虑**：
+- **坐标归一化**：将顶点坐标归一化到 $[-1, 1]^3$ 内
+- **批归一化**：对每个网格独立归一化，保持形状不变性
+- **加权损失**：根据顶点重要性（如曲率、面积）加权：
+  $$\mathcal{L}_{weighted} = \mathbb{E} \left[ \sum_{i=1}^{N} w_i ||\epsilon_i - \epsilon_\theta(\mathbf{x}_t, t)_i||^2 \right]$$
 
 ### 13.1.4 3D数据的特殊考虑
 
-对于3D网格数据，需要考虑以下特殊性：
+3D网格数据具有独特的几何和拓扑性质，在应用扩散模型时需要特殊处理以保证生成质量和几何合理性。
 
-1. **旋转不变性**：3D物体的表示应该对旋转具有不变性或等变性
-2. **尺度归一化**：不同网格的尺度差异需要预处理
-3. **中心化**：将网格中心移至原点
-4. **拓扑保持**：扩散过程中如何维护网格的拓扑结构
+**1. 旋转不变性与等变性**
+
+3D物体在不同方向观察应该是同一物体，因此模型需要处理旋转对称性：
+
+- **数据增强**：训练时对网格施加随机SO(3)旋转：
+  $$\mathbf{x}_0^{aug} = \mathbf{R} \cdot \mathbf{x}_0, \quad \mathbf{R} \in SO(3)$$
+  
+- **等变网络架构**：使用SE(3)等变的网络层，如Vector Neurons或Tensor Field Networks
+
+- **规范化对齐**：通过PCA或其他方法将网格对齐到规范坐标系：
+  $$\mathbf{C} = \frac{1}{N}\sum_{i=1}^{N} \mathbf{v}_i \mathbf{v}_i^T$$
+  主轴由 $\mathbf{C}$ 的特征向量给出
+
+**2. 尺度与平移归一化**
+
+不同来源的网格尺度差异巨大，需要标准化处理：
+
+- **中心化**：将质心移至原点
+  $$\mathbf{v}_i' = \mathbf{v}_i - \frac{1}{N}\sum_{j=1}^{N} \mathbf{v}_j$$
+
+- **尺度归一化**：常见方法包括：
+  - 单位球归一化：$\max_i ||\mathbf{v}_i|| = 1$
+  - 单位方差归一化：$\text{Var}(\mathbf{v}) = 1$
+  - 包围盒归一化：缩放到 $[-1, 1]^3$
+
+- **保持纵横比**：使用统一缩放因子
+  $$s = \frac{1}{\max(\text{bbox}_x, \text{bbox}_y, \text{bbox}_z)}$$
+
+**3. 拓扑保持策略**
+
+扩散过程可能破坏网格的拓扑结构，导致自相交、非流形等问题：
+
+- **拓扑正则化损失**：
+  $$\mathcal{L}_{topo} = \lambda_1 \mathcal{L}_{edge} + \lambda_2 \mathcal{L}_{angle} + \lambda_3 \mathcal{L}_{manifold}$$
+  
+  其中：
+  - $\mathcal{L}_{edge}$：边长保持损失
+  - $\mathcal{L}_{angle}$：二面角保持损失
+  - $\mathcal{L}_{manifold}$：流形约束损失
+
+- **分层扩散**：先生成粗糙拓扑，再细化几何
+  $$\mathbf{x}_0^{coarse} \rightarrow \mathbf{x}_0^{medium} \rightarrow \mathbf{x}_0^{fine}$$
+
+- **隐式表示中介**：通过SDF或占据场作为中间表示，保证水密性
+
+**4. 网格连接性处理**
+
+网格不仅包含顶点位置，还有面片连接信息：
+
+- **固定拓扑**：保持面片连接不变，只改变顶点位置
+  - 适用于同拓扑的形状变形
+  - 可使用图神经网络编码连接信息
+
+- **动态拓扑**：同时生成顶点和面片
+  - 使用PolyGen类序列生成
+  - 或通过隐式场提取
+
+- **混合表示**：
+  $$\mathbf{x}_t = [\mathbf{V}_t, \mathbf{F}_{embed}]$$
+  其中 $\mathbf{V}_t$ 是扩散的顶点，$\mathbf{F}_{embed}$ 是面片的学习嵌入
+
+**5. 采样效率优化**
+
+3D数据维度高（$N \times 3$），需要特殊优化：
+
+- **分块处理**：将大网格分成局部patches
+- **自适应采样**：根据局部复杂度调整噪声步数
+- **层级生成**：从低分辨率到高分辨率逐步生成
 
 ## 13.2 Score-based生成模型
 
 ### 13.2.1 Score函数与扩散的联系
 
+Score-based生成模型提供了扩散模型的另一种理论视角，通过估计数据分布的score函数（对数概率的梯度）来生成样本。这个框架由Song和Ermon(2019)提出，后来与扩散模型统一。
+
+**Score函数的定义与性质**
+
 Score函数定义为对数概率密度的梯度：
+$$\mathbf{s}(\mathbf{x}, t) = \nabla_\mathbf{x} \log p_t(\mathbf{x})$$
 
-$$s(x, t) = \nabla_x \log p_t(x)$$
+Score函数具有重要性质：
+- **无需归一化常数**：$\nabla_\mathbf{x} \log p(\mathbf{x}) = \nabla_\mathbf{x} \log \tilde{p}(\mathbf{x})$，其中 $\tilde{p}$ 是未归一化分布
+- **指向高概率方向**：score指向概率密度增加最快的方向
+- **期望为零**：$\mathbb{E}_{p(\mathbf{x})}[\mathbf{s}(\mathbf{x})] = 0$（Stein恒等式）
 
-在扩散模型框架下，score函数与噪声预测网络存在直接关系：
+**扩散过程的Score**
 
-$$s_\theta(x_t, t) = -\frac{1}{\sqrt{1-\bar{\alpha}_t}}\epsilon_\theta(x_t, t)$$
+对于扩散过程 $q(\mathbf{x}_t|\mathbf{x}_0) = \mathcal{N}(\mathbf{x}_t; \sqrt{\bar{\alpha}_t}\mathbf{x}_0, (1-\bar{\alpha}_t)\mathbf{I})$，其score函数为：
+
+$$\nabla_{\mathbf{x}_t} \log q(\mathbf{x}_t|\mathbf{x}_0) = -\frac{\mathbf{x}_t - \sqrt{\bar{\alpha}_t}\mathbf{x}_0}{1-\bar{\alpha}_t} = -\frac{\boldsymbol{\epsilon}}{\sqrt{1-\bar{\alpha}_t}}$$
+
+这建立了score函数与噪声的直接联系。
+
+**Score与噪声预测的等价性**
+
+扩散模型中的噪声预测网络 $\boldsymbol{\epsilon}_\theta(\mathbf{x}_t, t)$ 与score网络 $\mathbf{s}_\theta(\mathbf{x}_t, t)$ 存在简单关系：
+
+$$\mathbf{s}_\theta(\mathbf{x}_t, t) = -\frac{1}{\sqrt{1-\bar{\alpha}_t}}\boldsymbol{\epsilon}_\theta(\mathbf{x}_t, t)$$
+
+这意味着：
+- 训练噪声预测网络等价于训练score网络
+- DDPM的损失函数可以理解为score matching损失
+- 两种视角可以互换使用
+
+**Tweedie公式与去噪**
+
+Tweedie公式提供了从噪声观测估计原始信号的方法：
+
+$$\mathbb{E}[\mathbf{x}_0|\mathbf{x}_t] = \frac{1}{\sqrt{\bar{\alpha}_t}}(\mathbf{x}_t + (1-\bar{\alpha}_t)\nabla_{\mathbf{x}_t} \log p_t(\mathbf{x}_t))$$
+
+将score函数代入：
+$$\hat{\mathbf{x}}_0 = \frac{1}{\sqrt{\bar{\alpha}_t}}(\mathbf{x}_t - \sqrt{1-\bar{\alpha}_t}\boldsymbol{\epsilon}_\theta(\mathbf{x}_t, t))$$
+
+这正是扩散模型中用于预测 $\mathbf{x}_0$ 的公式，展示了两个框架的深层联系。
 
 ### 13.2.2 连续时间扩散（SDE视角）
 
-将离散时间扩散推广到连续时间，前向过程可表示为随机微分方程（SDE）：
+Song等人(2021)提出了基于随机微分方程(SDE)的统一框架，将离散时间扩散推广到连续时间，提供了更灵活的理论工具。
 
-$$dx = f(x, t)dt + g(t)dw$$
+**前向SDE**
 
-其中 $f(x, t) = -\frac{1}{2}\beta(t)x$，$g(t) = \sqrt{\beta(t)}$，$w$ 是标准布朗运动。
+连续时间扩散过程可以描述为：
+$$d\mathbf{x} = \mathbf{f}(\mathbf{x}, t)dt + g(t)d\mathbf{w}$$
 
-对应的逆向SDE为：
+其中：
+- $\mathbf{f}(\mathbf{x}, t)$：漂移系数（drift）
+- $g(t)$：扩散系数（diffusion）
+- $\mathbf{w}$：标准维纳过程（布朗运动）
 
-$$dx = [f(x, t) - g(t)^2 \nabla_x \log p_t(x)]dt + g(t)d\bar{w}$$
+对于variance preserving (VP) SDE：
+$$\mathbf{f}(\mathbf{x}, t) = -\frac{1}{2}\beta(t)\mathbf{x}, \quad g(t) = \sqrt{\beta(t)}$$
+
+对于variance exploding (VE) SDE：
+$$\mathbf{f}(\mathbf{x}, t) = \mathbf{0}, \quad g(t) = \sqrt{\frac{d[\sigma^2(t)]}{dt}}$$
+
+**边际分布**
+
+VP-SDE的边际分布为：
+$$p_{0t}(\mathbf{x}_t|\mathbf{x}_0) = \mathcal{N}(\mathbf{x}_t; \mathbf{x}_0e^{-\frac{1}{2}\int_0^t \beta(s)ds}, \mathbf{I}(1-e^{-\int_0^t \beta(s)ds}))$$
+
+这与离散DDPM在连续极限下一致。
+
+**逆向SDE**
+
+Anderson(1982)证明了前向SDE存在对应的逆向SDE：
+$$d\mathbf{x} = [\mathbf{f}(\mathbf{x}, t) - g(t)^2 \nabla_\mathbf{x} \log p_t(\mathbf{x})]dt + g(t)d\bar{\mathbf{w}}$$
+
+其中 $\bar{\mathbf{w}}$ 是逆向时间的布朗运动。这个公式的关键是score函数 $\nabla_\mathbf{x} \log p_t(\mathbf{x})$。
+
+**数值求解**
+
+使用Euler-Maruyama方法离散化：
+$$\mathbf{x}_{t-\Delta t} = \mathbf{x}_t - [\mathbf{f}(\mathbf{x}_t, t) - g(t)^2 \mathbf{s}_\theta(\mathbf{x}_t, t)]\Delta t + g(t)\sqrt{\Delta t}\mathbf{z}$$
+
+其中 $\mathbf{z} \sim \mathcal{N}(0, \mathbf{I})$。
+
+**SDE的优势**
+
+1. **统一框架**：DDPM、SMLD、DDIM等都是特例
+2. **灵活性**：可设计新的SDE对
+3. **理论工具**：可借用随机分析的成熟理论
+4. **可控生成**：通过修改drift项实现条件生成
 
 ### 13.2.3 概率流ODE
 
-去除随机项，得到确定性的概率流ODE：
+通过去除SDE中的随机项，可以得到确定性的常微分方程(ODE)，其边际分布与原SDE相同。
 
-$$dx = \left[f(x, t) - \frac{1}{2}g(t)^2 \nabla_x \log p_t(x)\right]dt$$
+**概率流ODE推导**
 
-这个ODE的解与SDE具有相同的边际分布，但轨迹是确定的，便于快速采样。
+对于任意前向SDE，存在对应的概率流ODE：
+$$\frac{d\mathbf{x}}{dt} = \mathbf{f}(\mathbf{x}, t) - \frac{1}{2}g(t)^2 \nabla_\mathbf{x} \log p_t(\mathbf{x})$$
+
+这个ODE的特点：
+- **确定性**：给定初始条件，轨迹唯一确定
+- **可逆性**：可以精确重建编码过程
+- **边际分布相同**：$p_t(\mathbf{x})$ 与SDE一致
+
+**与神经ODE的联系**
+
+概率流ODE可以看作神经ODE的特例：
+$$\frac{d\mathbf{x}}{dt} = f_\theta(\mathbf{x}, t)$$
+
+其中 $f_\theta = \mathbf{f} - \frac{1}{2}g^2 \mathbf{s}_\theta$。
+
+**快速采样**
+
+ODE求解器通常比SDE更高效：
+- **高阶方法**：RK45、DPM-Solver等
+- **自适应步长**：根据局部误差调整
+- **并行化**：批量ODE求解
+
+对于3D网格生成，ODE特别有用：
+1. **插值**：在隐空间进行平滑插值
+2. **编辑**：精确控制生成过程
+3. **压缩**：将网格编码为隐变量
+
+**数值求解器选择**
+
+不同求解器的权衡：
+- **Euler方法**：简单但需要小步长
+- **Heun方法**：二阶精度，适中复杂度
+- **RK45**：自适应高精度，但计算量大
+- **DPM-Solver**：专为扩散模型设计，效率高
 
 ### 13.2.4 Score matching训练
 
-Score matching的目标是最小化：
+Score matching提供了直接训练score函数的方法，无需知道归一化常数。
 
-$$\mathcal{L}_{score} = \mathbb{E}_{t,x_0,x_t} \left[ \lambda(t) ||s_\theta(x_t, t) - \nabla_{x_t} \log q(x_t|x_0)||^2 \right]$$
+**Denoising Score Matching (DSM)**
 
-其中 $\lambda(t)$ 是时间相关的权重函数。对于3D网格，可以根据几何特征设计自适应的权重。
+Vincent(2011)提出的去噪score matching：
+$$\mathcal{L}_{DSM} = \mathbb{E}_{\mathbf{x}_0 \sim p_{data}} \mathbb{E}_{\tilde{\mathbf{x}} \sim q(\tilde{\mathbf{x}}|\mathbf{x}_0)} \left[ ||\mathbf{s}_\theta(\tilde{\mathbf{x}}, \sigma) - \nabla_{\tilde{\mathbf{x}}} \log q(\tilde{\mathbf{x}}|\mathbf{x}_0)||^2 \right]$$
+
+其中 $q(\tilde{\mathbf{x}}|\mathbf{x}_0) = \mathcal{N}(\tilde{\mathbf{x}}; \mathbf{x}_0, \sigma^2\mathbf{I})$。
+
+**时间相关的Score Matching**
+
+对于扩散过程，需要匹配所有时间的score：
+$$\mathcal{L}_{score} = \mathbb{E}_{t \sim \mathcal{U}(0,T)} \mathbb{E}_{\mathbf{x}_0, \mathbf{x}_t} \left[ \lambda(t) ||\mathbf{s}_\theta(\mathbf{x}_t, t) - \nabla_{\mathbf{x}_t} \log q(\mathbf{x}_t|\mathbf{x}_0)||^2 \right]$$
+
+**权重函数设计**
+
+$\lambda(t)$ 的选择影响训练效果：
+
+1. **常数权重**：$\lambda(t) = 1$
+   - 简单但可能不平衡
+
+2. **信噪比权重**：$\lambda(t) = \text{SNR}(t) = \bar{\alpha}_t/(1-\bar{\alpha}_t)$
+   - 平衡不同噪声水平的贡献
+
+3. **最小方差权重**：$\lambda(t) = g(t)^2$
+   - 理论最优但实践中需调整
+
+4. **几何感知权重**（3D特定）：
+   $$\lambda(t, \mathbf{x}) = \lambda_{base}(t) \cdot \exp(-\gamma \cdot \text{curvature}(\mathbf{x}))$$
+   - 高曲率区域给予更多关注
+
+**Sliced Score Matching (SSM)**
+
+对于高维3D数据，可使用切片score matching降低计算：
+$$\mathcal{L}_{SSM} = \mathbb{E}_{\mathbf{v} \sim p_{\mathbf{v}}} \mathbb{E}_{\mathbf{x}} \left[ \frac{1}{2}(\mathbf{v}^T \mathbf{s}_\theta(\mathbf{x}))^2 + \mathbf{v}^T \nabla_\mathbf{x} (\mathbf{v}^T \mathbf{s}_\theta(\mathbf{x})) \right]$$
+
+其中 $\mathbf{v}$ 是随机投影方向。
+
+**3D网格的Score Matching优化**
+
+1. **分层训练**：
+   - 先训练粗尺度score
+   - 逐步细化到精细尺度
+
+2. **局部Score**：
+   $$\mathbf{s}_{local}(\mathbf{x}_i) = \sum_{j \in \mathcal{N}(i)} w_{ij} \mathbf{s}_\theta(\mathbf{x}_j)$$
+   - 利用网格局部结构
+
+3. **等变Score网络**：
+   - 保证 $\mathbf{s}_\theta(\mathbf{R}\mathbf{x}) = \mathbf{R}\mathbf{s}_\theta(\mathbf{x})$
+   - 提高泛化能力
+
+4. **多尺度损失**：
+   $$\mathcal{L}_{multi} = \sum_{k=1}^{K} w_k \mathcal{L}_{score}^{(k)}$$
+   - 不同分辨率同时训练
 
 ## 13.3 3D数据的噪声调度
 
