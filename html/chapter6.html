@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="./">
+    <title>第6章：基于Delaunay的重建方法</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="assets/highlight.css">
+    <script src="assets/script.js" defer></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']],
+                processEscapes: false,
+                packages: {'[+]': ['noerrors', 'ams']}
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            },
+            loader: {
+                load: ['[tex]/noerrors', '[tex]/ams']
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3>目录</h3>
+                <button id="sidebar-toggle" class="sidebar-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            <div class="sidebar-search">
+                <input type="text" id="sidebar-search-input" placeholder="搜索..." autocomplete="off">
+            </div>
+            <div id="tree-container">
+                <nav class="tree-nav" role="tree">
+                    <div class="tree-item " >
+                        <a href="index.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">3D 网格生成完整教程</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter1.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第1章：3D表示基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter2.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第2章：几何处理基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter3.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第3章：采样理论与重建基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter4.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第4章：Marching Cubes与体素方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter5.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第5章：Poisson表面重建</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item active" >
+                        <a href="chapter6.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第6章：基于Delaunay的重建方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter7.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第7章：神经隐式表示基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter8.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第8章：DeepSDF与Occupancy Networks</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter9.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第9章：可微分网格提取</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter10.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第10章：基于变形的网格生成</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter11.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第11章：参数化曲面方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter12.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第12章：序列生成方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter13.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第13章：3D扩散模型基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter14.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第14章：文本/图像驱动的3D生成</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter15.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第15章：前馈式快速生成</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter16.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第16章：多视图重建与新型表示</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="CLAUDE.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">1) 经典几何重建：点云/体素 → 网格</span>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </nav>
+        
+        <main class="content">
+            <article>
+                <h1 id="6delaunay">第6章：基于Delaunay的重建方法</h1>
+<p>Delaunay三角化作为计算几何的基石，在3D表面重建中扮演着核心角色。与基于隐式场的方法不同，Delaunay方法直接从点云的几何结构出发，通过组合优化原理构造网格。这类方法的理论基础深厚，能够提供拓扑和几何性质的数学保证。本章深入探讨Ball Pivoting、Alpha shapes、Power crust等经典算法，分析它们如何利用Delaunay结构的优良性质实现鲁棒的表面重建，并讨论实践中的关键技术挑战。</p>
+<h2 id="61-ball-pivoting">6.1 Ball Pivoting算法</h2>
+<p>Ball Pivoting Algorithm (BPA) 通过模拟一个虚拟球在点云表面滚动的过程来构造三角网格。这个直观的几何隐喻背后蕴含着深刻的采样理论和拓扑保证。</p>
+<h3 id="611">6.1.1 算法核心思想</h3>
+<p>算法的基本假设是点云满足 $\rho$-采样条件：对于表面上任意点 $p$，在半径 $\rho$ 的球内至少存在一个采样点。给定半径为 $\rho$ 的球 $B_\rho$，算法寻找所有能被 $B_\rho$ 支撑的三角形。</p>
+<p><strong>定义</strong>：三个点 $p_i, p_j, p_k$ 形成的三角形 $(i,j,k)$ 被半径为 $\rho$ 的球支撑，当且仅当存在一个半径为 $\rho$ 的球，使得：</p>
+<ol>
+<li>三点在球面上：$||c - p_i|| = ||c - p_j|| = ||c - p_k|| = \rho$</li>
+<li>球内部不包含其他采样点：$\forall p_l \in P, ||c - p_l|| \geq \rho$</li>
+</ol>
+<p>其中 $c$ 是球心位置，可通过求解方程组得到：</p>
+<p>$$c = \frac{p_i + p_j + p_k}{3} + \lambda \cdot n_{ijk}$$
+其中 $n_{ijk}$ 是三角形法向量，$\lambda$ 由半径约束确定。</p>
+<h3 id="612">6.1.2 种子三角形选择</h3>
+<p>算法从种子三角形开始，逐步扩展构造完整网格。种子选择策略直接影响重建质量：</p>
+<ol>
+<li><strong>距离准则</strong>：选择边长接近 $2\rho\cos\theta$ 的三角形，其中 $\theta$ 是期望的最大入射角</li>
+<li><strong>法向一致性</strong>：验证三点法向量的夹角小于阈值 $\theta_{max}$</li>
+<li><strong>空球性质</strong>：确保支撑球内部为空</li>
+</ol>
+<p>种子验证的数值稳定性至关重要。对于三点共线或接近共线的情况，使用条件数检测：
+$$\kappa = \frac{\sigma_{max}}{\sigma_{min}} &lt; \kappa_{threshold}$$</p>
+<h3 id="613">6.1.3 前沿扩展机制</h3>
+<div class="codehilite"><pre><span></span><code>     Active Edge Front
+         p_i ---- p_j
+          /        \
+         /  △_old   \
+        /            \
+       p_k ---------- ?
+
+     Ball pivots around edge (p_i, p_j)
+     to find new vertex p_new
+</code></pre></div>
+
+<p>前沿（front）是已构造网格的边界，由活跃边组成。对每条活跃边 $(p_i, p_j)$：</p>
+<ol>
+<li><strong>球心轨迹计算</strong>：球绕边旋转时，球心轨迹是以边为轴的圆</li>
+<li><strong>候选点搜索</strong>：在轨迹附近搜索满足距离约束的点</li>
+<li><strong>最优点选择</strong>：选择使球旋转角度最小的点</li>
+</ol>
+<p>球心位置参数化表示：
+$$c(\theta) = m_{ij} + r \cos\theta \cdot u + r \sin\theta \cdot v$$
+其中 $m_{ij}$ 是边中点，$u, v$ 是正交基，$r = \sqrt{\rho^2 - \frac{||p_j - p_i||^2}{4}}$。</p>
+<h3 id="614">6.1.4 多尺度策略</h3>
+<p>单一半径 $\rho$ 难以处理采样密度变化的点云。多尺度Ball Pivoting使用递增的半径序列：
+$$\rho_0 &lt; \rho_1 &lt; ... &lt; \rho_n$$
+每个尺度的输出作为下一尺度的输入，逐步填补空洞：</p>
+<ul>
+<li>$\rho_0$：捕获细节特征</li>
+<li>$\rho_i$：填补中等尺度空洞</li>
+<li>$\rho_n$：完成大尺度闭合</li>
+</ul>
+<p>半径选择基于局部特征尺度（Local Feature Size, LFS）估计：
+$$\rho_i = k_i \cdot \text{median}(LFS(p)), \quad k_i \in [1.0, 2.5]$$</p>
+<h2 id="62-alpha-shapes">6.2 Alpha Shapes理论</h2>
+<p>Alpha shapes提供了从离散点集重建形状的系统性框架，通过参数 $\alpha$ 控制重建的"分辨率"。</p>
+<h3 id="621-alpha">6.2.1 Alpha复形的数学定义</h3>
+<p>给定点集 $P \subset \mathbb{R}^3$ 和参数 $\alpha \in [0, \infty]$，$\alpha$-复形定义为：</p>
+<p><strong>定义 1（Alpha球）</strong>：半径为 $\alpha$ 的球 $B$ 是 $P$ 的 $\alpha$-球，如果：</p>
+<ul>
+<li>$B \cap P \neq \emptyset$（球与点集相交）</li>
+<li>$B$ 的内部不包含 $P$ 中的点</li>
+</ul>
+<p><strong>定义 2（Alpha复形）</strong>：$P$ 的 $\alpha$-复形 $\mathcal{C}_\alpha(P)$ 是所有能被某个 $\alpha$-球包含的单形（顶点、边、三角形、四面体）的集合。</p>
+<p>形式化表示：
+$$\mathcal{C}_\alpha(P) = \{\sigma \subseteq P : \exists B_\alpha, \sigma \subseteq \partial B_\alpha \land \text{int}(B_\alpha) \cap P = \emptyset\}$$</p>
+<h3 id="622-delaunay">6.2.2 与Delaunay三角化的关系</h3>
+<p>Alpha复形是Delaunay三角化的子复形，这个关系是算法效率的关键：
+$$\mathcal{C}_0(P) \subseteq \mathcal{C}_\alpha(P) \subseteq \mathcal{C}_\beta(P) \subseteq ... \subseteq \mathcal{C}_\infty(P) = \text{DT}(P)$$
+其中 $\text{DT}(P)$ 是 $P$ 的Delaunay三角化。</p>
+<p><strong>筛选准则</strong>：Delaunay三角化中的单形 $\sigma$ 属于 $\alpha$-复形，当且仅当：
+$$r_\sigma \leq \alpha$$
+其中 $r_\sigma$ 是 $\sigma$ 的外接球半径。</p>
+<h3 id="623-alpha">6.2.3 Alpha值的几何意义</h3>
+<div class="codehilite"><pre><span></span><code>    α = 0.5              α = 1.0              α = 2.0
+     。。                。---。              。---。
+    。  。              。|   |。            。|███|。
+     。。                。---。              。---。
+  (离散点)            (局部连接)          (全局结构)
+</code></pre></div>
+
+<p>Alpha参数控制重建的细节层次：</p>
+<ul>
+<li><strong>小 $\alpha$</strong>：只保留紧密相邻的点之间的连接，捕获局部细节</li>
+<li><strong>中等 $\alpha$</strong>：平衡局部和全局特征</li>
+<li><strong>大 $\alpha$</strong>：产生更光滑、更连通的结构</li>
+</ul>
+<p>最优 $\alpha$ 选择基于持续同调（Persistent Homology）分析：
+$$\alpha^* = \arg\max_\alpha \{\text{Persistence}(\beta_1(\mathcal{C}_\alpha))\}$$
+其中 $\beta_1$ 是第一贝蒂数，表征孔洞数量。</p>
+<h3 id="624-alpha-shapes">6.2.4 加权Alpha Shapes</h3>
+<p>标准Alpha shapes对所有点使用统一权重。加权版本为每个点 $p_i$ 赋予权重 $w_i$，定义加权距离：
+$$d_w(p, p_i) = ||p - p_i||^2 - w_i$$
+加权Alpha shapes能更好地处理：</p>
+<ul>
+<li>采样密度变化</li>
+<li>噪声鲁棒性</li>
+<li>特征保持</li>
+</ul>
+<p>权重设置策略：
+$$w_i = k \cdot \text{LFS}(p_i)^2$$
+其中 $k \in [0.8, 1.2]$ 是调节参数。</p>
+<h2 id="63-power-crust">6.3 Power Crust与紧致曲面</h2>
+<p>Power crust算法利用Voronoi图的对偶性质和中轴变换理论，提供了理论保证的水密表面重建。</p>
+<h3 id="631">6.3.1 中轴变换与采样理论</h3>
+<p><strong>中轴（Medial Axis）</strong> 是到表面具有多个最近点的点的集合：
+$$\text{MA}(S) = \{x \in \mathbb{R}^3 : |\{p \in S : ||x-p|| = d(x,S)\}| \geq 2\}$$
+Power crust的核心观察：对于密集采样的点云，Voronoi顶点近似表面的中轴。</p>
+<p><strong>定理（收敛性）</strong>：若点云 $P$ 是表面 $S$ 的 $\varepsilon$-采样（$\varepsilon &lt; 0.1$），则：</p>
+<ol>
+<li>Voronoi顶点到真实中轴的Hausdorff距离 $O(\varepsilon^2)$</li>
+<li>重建表面到原表面的Hausdorff距离 $O(\varepsilon^2)$</li>
+</ol>
+<h3 id="632">6.3.2 极点与局部特征尺度</h3>
+<p>对每个采样点 $p_i$，定义其<strong>极点（poles）</strong>：</p>
+<ol>
+<li><strong>外极点</strong> $p_i^+$：Voronoi cell $V(p_i)$ 中距离 $p_i$ 最远的顶点</li>
+<li><strong>内极点</strong> $p_i^-$：在 $p_i - p_i^+$ 反方向上最远的Voronoi顶点</li>
+</ol>
+<p>极点近似局部中轴，提供局部特征尺度估计：
+$$\text{LFS}(p_i) \approx ||p_i - p_i^+||$$</p>
+<h3 id="633-power">6.3.3 Power图构造</h3>
+<p>Power图（加权Voronoi图）定义：给定点集 $P$ 和权重 $W$，点 $x$ 属于 $p_i$ 的power cell当且仅当：
+$$||x - p_i||^2 - w_i \leq ||x - p_j||^2 - w_j, \quad \forall j \neq i$$
+Power crust使用极点作为加权点：</p>
+<ul>
+<li>点集：$P \cup P^+ \cup P^-$（原始点加内外极点）</li>
+<li>权重：$w_i = -||p_i - p_i^{\pm}||^2$（负的到极点距离平方）</li>
+</ul>
+<h3 id="634">6.3.4 表面提取与水密性</h3>
+<p>从Power图中提取表面：</p>
+<ol>
+<li><strong>标记内外极点</strong>：基于法向一致性和可见性</li>
+<li><strong>选择分隔面</strong>：Power图中分隔内外极点的面片</li>
+<li><strong>构造Power crust</strong>：所选面片的并集</li>
+</ol>
+<p><strong>水密性保证</strong>：在 $\varepsilon &lt; 0.1$ 的采样条件下，Power crust是：</p>
+<ul>
+<li>拓扑正确：与原表面同胚</li>
+<li>几何精确：Hausdorff距离 $O(\varepsilon^2 \cdot \text{LFS})$</li>
+<li>水密闭合：形成封闭流形</li>
+</ul>
+<h3 id="635">6.3.5 算法优化与实现</h3>
+<p>计算复杂度：$O(n \log n + k)$，其中 $k$ 是输出大小。</p>
+<p>优化策略：</p>
+<ol>
+<li><strong>八叉树加速</strong>：快速定位最近邻和Voronoi顶点</li>
+<li><strong>增量构造</strong>：利用Delaunay三角化的局部性</li>
+<li><strong>并行化</strong>：极点计算和标记阶段的并行处理</li>
+</ol>
+<p>数值稳定性处理：</p>
+<div class="codehilite"><pre><span></span><code>IF ||p_i - p_j|| &lt; ε_merge THEN
+    合并近距离点
+IF angle(n_i, p_i - pole_i) &gt; θ_max THEN  
+    使用次优极点
+IF Voronoi_cell无界 THEN
+    使用边界框人工极点
+</code></pre></div>
+
+<h2 id="64">6.4 法向一致性处理</h2>
+<p>法向定向是基于Delaunay重建的关键预处理步骤。点云通常只有未定向的法向量（由PCA或其他方法估计），需要全局一致的定向。</p>
+<h3 id="641">6.4.1 法向定向问题的数学描述</h3>
+<p>给定点云 $P = \{p_1, ..., p_n\}$ 和未定向法向 $\{n_1, ..., n_n\}$，目标是为每个法向选择符号 $s_i \in \{-1, +1\}$，使得：
+$$\min_{s \in \{-1,+1\}^n} \sum_{(i,j) \in E} w_{ij} \cdot (1 - s_i \cdot s_j \cdot \langle n_i, n_j \rangle)$$
+其中 $E$ 是近邻图的边集，$w_{ij}$ 是权重。</p>
+<p>这是一个NP困难的二次布尔优化问题，实践中使用贪婪算法或松弛方法。</p>
+<h3 id="642">6.4.2 最小生成树传播</h3>
+<p>最稳健的方法是基于Riemannian图的最小生成树（MST）：</p>
+<ol>
+<li>
+<p><strong>构建Riemannian图</strong>：
+   - 顶点：采样点
+   - 边权：$w_{ij} = 1 - |\langle n_i, n_j \rangle|$</p>
+</li>
+<li>
+<p><strong>计算MST</strong>：使用Kruskal或Prim算法</p>
+</li>
+<li>
+<p><strong>传播定向</strong>：</p>
+</li>
+</ol>
+<div class="codehilite"><pre><span></span><code>从种子点开始BFS遍历MST：
+FOR each edge (p_i, p_j) in MST:
+    IF ⟨n_i, n_j⟩ &lt; 0 THEN
+        n_j ← -n_j
+</code></pre></div>
+
+<p>种子选择策略：</p>
+<ul>
+<li><strong>可见性准则</strong>：选择到视点可见的点</li>
+<li><strong>曲率准则</strong>：选择低曲率区域的点</li>
+<li><strong>置信度准则</strong>：选择法向估计置信度最高的点</li>
+</ul>
+<h3 id="643">6.4.3 基于传播的优化</h3>
+<p>MST可能产生错误累积。改进方法使用加权投票：</p>
+<p>对每个点 $p_i$，其法向由邻域投票决定：
+$$n_i^{new} = \text{sign}\left(\sum_{j \in N(i)} w_{ij} \cdot \langle n_i, n_j \rangle \cdot n_j\right)$$
+权重设计考虑：</p>
+<ul>
+<li><strong>距离衰减</strong>：$w_{ij} = \exp(-||p_i - p_j||^2 / \sigma^2)$</li>
+<li><strong>法向相似性</strong>：$w_{ij} = |\langle n_i, n_j \rangle|^k$</li>
+<li><strong>可见性一致</strong>：$w_{ij} = \max(0, \langle v_i, n_j \rangle)$</li>
+</ul>
+<p>迭代优化过程：</p>
+<div class="codehilite"><pre><span></span><code><span class="nv">REPEAT</span><span class="w"> </span><span class="k">until</span><span class="w"> </span><span class="nv">convergence</span>:
+
+<span class="w">    </span><span class="mi">1</span>.<span class="w"> </span>固定高置信度点的法向
+<span class="w">    </span><span class="mi">2</span>.<span class="w"> </span>传播到邻域
+<span class="w">    </span><span class="mi">3</span>.<span class="w"> </span>解决冲突（投票）
+<span class="w">    </span><span class="mi">4</span>.<span class="w"> </span>更新置信度
+</code></pre></div>
+
+<h3 id="644">6.4.4 歧义处理与鲁棒性</h3>
+<p>某些几何配置存在固有歧义：</p>
+<p><strong>薄片结构</strong>：两侧法向都合理</p>
+<ul>
+<li>解决：使用体积化或厚度先验</li>
+</ul>
+<p><strong>环形结构</strong>：存在Möbius带型解</p>
+<ul>
+<li>解决：检测并切断环路</li>
+</ul>
+<p><strong>噪声区域</strong>：法向估计不可靠</p>
+<ul>
+<li>解决：使用鲁棒估计和中值滤波</li>
+</ul>
+<p><strong>多连通组件</strong>：组件间定向不一致</p>
+<ul>
+<li>解决：分别处理每个连通组件</li>
+</ul>
+<h3 id="645-delaunay">6.4.5 与Delaunay方法的集成</h3>
+<p>法向一致性直接影响Delaunay重建质量：</p>
+<ol>
+<li><strong>Ball Pivoting</strong>：需要一致法向来确定球的滚动方向</li>
+<li><strong>Power Crust</strong>：使用法向区分内外极点</li>
+<li><strong>Alpha Shapes</strong>：法向用于后处理和孔洞填充</li>
+</ol>
+<p>集成策略：</p>
+<div class="codehilite"><pre><span></span><code><span class="n">Pipeline</span><span class="o">:</span>
+
+<span class="mi">1</span><span class="o">.</span><span class="w"> </span><span class="err">初始法向估计（</span><span class="n">PCA</span><span class="o">/</span><span class="n">Jet</span><span class="w"> </span><span class="n">fitting</span><span class="err">）</span>
+<span class="mi">2</span><span class="o">.</span><span class="w"> </span><span class="err">法向一致性处理（本节方法）</span>
+<span class="mi">3</span><span class="o">.</span><span class="w"> </span><span class="n">Delaunay结构构建</span>
+<span class="mi">4</span><span class="o">.</span><span class="w"> </span><span class="err">基于法向的筛选</span><span class="o">/</span><span class="err">定向</span>
+<span class="mi">5</span><span class="o">.</span><span class="w"> </span><span class="err">网格后处理</span>
+</code></pre></div>
+
+<h2 id="_1">本章小结</h2>
+<p>本章系统介绍了基于Delaunay三角化的表面重建方法。这类方法的核心优势在于：</p>
+<p><strong>理论保证</strong>：</p>
+<ul>
+<li>Ball Pivoting在满足 $\rho$-采样条件时保证流形输出</li>
+<li>Alpha Shapes提供多尺度拓扑控制</li>
+<li>Power Crust在 $\varepsilon &lt; 0.1$ 采样下保证同胚重建</li>
+</ul>
+<p><strong>关键技术</strong>：</p>
+<ul>
+<li><strong>Delaunay/Voronoi对偶性</strong>：提供高效的几何查询结构</li>
+<li><strong>局部特征尺度（LFS）</strong>：自适应采样密度变化</li>
+<li><strong>法向一致性</strong>：确保全局定向正确</li>
+</ul>
+<p><strong>算法对比</strong>：
+| 方法 | 时间复杂度 | 空间复杂度 | 水密性 | 拓扑保证 |</p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>时间复杂度</th>
+<th>空间复杂度</th>
+<th>水密性</th>
+<th>拓扑保证</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ball Pivoting</td>
+<td>$O(n\log n)$</td>
+<td>$O(n)$</td>
+<td>否</td>
+<td>局部</td>
+</tr>
+<tr>
+<td>Alpha Shapes</td>
+<td>$O(n^2)$</td>
+<td>$O(n^2)$</td>
+<td>是</td>
+<td>全局</td>
+</tr>
+<tr>
+<td>Power Crust</td>
+<td>$O(n\log n)$</td>
+<td>$O(n)$</td>
+<td>是</td>
+<td>全局</td>
+</tr>
+</tbody>
+</table>
+<p><strong>实践要点</strong>：</p>
+<ol>
+<li>预处理质量（去噪、法向估计）直接决定重建质量</li>
+<li>参数选择（$\rho$, $\alpha$）需要基于采样密度分析</li>
+<li>多尺度策略能提高鲁棒性但增加计算成本</li>
+<li>法向一致性是成功重建的必要条件</li>
+</ol>
+<p>这些方法为点云到网格的转换提供了坚实的理论基础和实用工具，特别适合处理扫描数据和稠密采样的几何重建任务。</p>
+<h2 id="_2">练习题</h2>
+<h3 id="_3">基础题</h3>
+<p><strong>练习 6.1</strong>：给定三个点 $p_1 = (0, 0, 0)$, $p_2 = (1, 0, 0)$, $p_3 = (0.5, \sqrt{3}/2, 0)$，计算能支撑这个三角形的最小球半径 $\rho_{min}$。</p>
+<details>
+<summary>提示</summary>
+<p>考虑外接圆半径公式，这三个点构成等边三角形。</p>
+</details>
+<details>
+<summary>答案</summary>
+<p>等边三角形边长 $a = 1$，外接圆半径：
+$$r = \frac{a}{\sqrt{3}} = \frac{1}{\sqrt{3}} = \frac{\sqrt{3}}{3} \approx 0.577$$
+因此 $\rho_{min} = \frac{\sqrt{3}}{3}$。任何半径 $\rho \geq \rho_{min}$ 的球都能支撑这个三角形。</p>
+</details>
+<p><strong>练习 6.2</strong>：证明对于2D点集，当 $\alpha$ 从0增长到∞时，alpha shape的连通分量数量单调递减。</p>
+<details>
+<summary>提示</summary>
+<p>考虑alpha复形的嵌套性质：$\mathcal{C}_\alpha \subseteq \mathcal{C}_\beta$ 当 $\alpha &lt; \beta$。</p>
+</details>
+<details>
+<summary>答案</summary>
+<p>证明：</p>
+<ol>
+<li>由于 $\alpha &lt; \beta \Rightarrow \mathcal{C}_\alpha \subseteq \mathcal{C}_\beta$，增加 $\alpha$ 只会添加新的单形，不会删除</li>
+<li>新添加的边可能连接原本分离的连通分量</li>
+<li>连通分量数 $C(\alpha)$ 满足：$C(\alpha) \geq C(\beta)$ 当 $\alpha &lt; \beta$</li>
+<li>因此连通分量数量单调递减</li>
+<li>极限情况：$C(0) = n$（n个孤立点），$C(\infty) = k$（Delaunay三角化的连通分量数）</li>
+</ol>
+</details>
+<p><strong>练习 6.3</strong>：给定点云采样密度为 $\varepsilon = 0.05$（相对于局部特征尺度），估计Power Crust重建的Hausdorff误差上界。</p>
+<details>
+<summary>提示</summary>
+<p>使用Power Crust的理论保证：误差为 $O(\varepsilon^2 \cdot \text{LFS})$。</p>
+</details>
+<details>
+<summary>答案</summary>
+<p>根据Power Crust收敛性定理：</p>
+<ul>
+<li>Hausdorff距离上界：$d_H \leq c \cdot \varepsilon^2 \cdot \text{LFS}$</li>
+<li>其中常数 $c \approx 5$（经验值）</li>
+<li>
+<p>代入 $\varepsilon = 0.05$：
+$$d_H \leq 5 \times 0.05^2 \times \text{LFS} = 0.0125 \times \text{LFS}$$</p>
+</li>
+<li>
+<p>相对误差约为1.25%的局部特征尺度</p>
+</li>
+</ul>
+</details>
+<p><strong>练习 6.4</strong>：设计一个简单的法向一致性检测算法，判断给定的法向场是否全局一致。</p>
+<details>
+<summary>提示</summary>
+<p>构建近邻图，检查相邻法向的夹角。</p>
+</details>
+<details>
+<summary>答案</summary>
+<p>算法：</p>
+<div class="codehilite"><pre><span></span><code>输入：点云P，法向N，邻域半径r
+输出：是否一致（布尔值）
+
+1. 构建k-近邻图G(V,E)
+2. 对每条边(i,j)：
+   计算 cos_angle = ⟨n_i, n_j⟩
+   IF |cos_angle| &lt; threshold (如0.5) THEN
+      标记为不一致边
+
+3. 计算不一致边比例：
+   ratio = 不一致边数 / 总边数
+
+4. RETURN (ratio &lt; tolerance)
+</code></pre></div>
+
+<p>threshold = 0.5对应60度夹角，tolerance典型值0.05（5%容错）。</p>
+</details>
+<h3 id="_4">挑战题</h3>
+<p><strong>练习 6.5</strong>：Ball Pivoting算法中，如何处理不同采样密度的点云？设计一个自适应半径选择策略。</p>
+<details>
+<summary>提示</summary>
+<p>基于局部点密度估计动态调整球半径。</p>
+</details>
+<details>
+<summary>答案</summary>
+<p>自适应策略：</p>
+<ol>
+<li>
+<p><strong>局部密度估计</strong>：
+$$\rho_i = k \cdot \sqrt[3]{\frac{\text{Volume}(N_k(p_i))}{k}}$$
+其中 $N_k(p_i)$ 是 $p_i$ 的k近邻包围盒体积</p>
+</li>
+<li>
+<p><strong>多分辨率队列</strong>：
+   - 维护不同半径级别的边界队列
+   - 优先处理小半径（高密度区域）
+   - 逐步增大半径填补空洞</p>
+</li>
+<li>
+<p><strong>过渡区处理</strong>：
+   - 在密度变化区域使用插值半径：
+$$\rho_{edge} = \frac{\rho_i + \rho_j}{2} \cdot (1 + \lambda \cdot \text{grad}(\rho))$$</p>
+</li>
+</ol>
+<ul>
+<li>$\text{grad}(\rho)$ 是密度梯度，$\lambda$ 控制过渡平滑度</li>
+</ul>
+<ol start="4">
+<li><strong>质量控制</strong>：
+   - 拒绝产生狭长三角形的配置（角度 &lt; 15°）
+   - 限制相邻三角形的尺寸比（&lt; 3:1）</li>
+</ol>
+</details>
+<p><strong>练习 6.6</strong>：分析Alpha shapes在处理带噪声点云时的行为。如何选择 $\alpha$ 值来平衡细节保留和噪声抑制？</p>
+<details>
+<summary>提示</summary>
+<p>考虑持续同调和尺度空间分析。</p>
+</details>
+<details>
+<summary>答案</summary>
+<p>噪声影响分析：</p>
+<ol>
+<li>
+<p><strong>噪声模型</strong>：假设噪声 $\eta \sim \mathcal{N}(0, \sigma^2)$</p>
+</li>
+<li>
+<p><strong>Alpha选择原则</strong>：
+   - 下界：$\alpha &gt; 3\sigma$（滤除噪声）
+   - 上界：$\alpha &lt; \text{min}(\text{LFS})/2$（保留特征）</p>
+</li>
+<li>
+<p><strong>尺度空间优化</strong>：
+$$\alpha^* = \arg\max_\alpha \left\{ \frac{\partial}{\partial \alpha} H_1(\mathcal{C}_\alpha) = 0 \right\}$$
+其中 $H_1$ 是一维同调群（孔洞）</p>
+</li>
+<li>
+<p><strong>实用策略</strong>：
+   - 计算持续性图（persistence diagram）
+   - 识别显著拓扑特征（高持续性）
+   - 选择 $\alpha$ 保留这些特征，滤除短暂特征（噪声）</p>
+</li>
+<li>
+<p><strong>自适应加权</strong>：
+$$w_i = \exp\left(-\frac{\text{var}(N_k(p_i))}{\sigma_{global}^2}\right)$$
+高方差区域（噪声）赋予低权重</p>
+</li>
+</ol>
+</details>
+<p><strong>练习 6.7</strong>：Power Crust中的极点可能退化（如平面区域）。设计一个鲁棒的极点计算方法。</p>
+<details>
+<summary>提示</summary>
+<p>使用主成分分析检测退化，采用替代策略。</p>
+</details>
+<details>
+<summary>答案</summary>
+<p>鲁棒极点计算：</p>
+<ol>
+<li>
+<p><strong>退化检测</strong>：
+   对Voronoi cell顶点做PCA：
+$$\lambda_1 \geq \lambda_2 \geq \lambda_3$$
+退化度：$d = \lambda_3 / \lambda_1$</p>
+</li>
+<li>
+<p><strong>分类处理</strong>：
+   - <strong>正常情况</strong> $(d &gt; 0.1)$：标准极点选择
+   - <strong>平面退化</strong> $(d &lt; 0.01)$：</p>
+</li>
+</ol>
+<div class="codehilite"><pre><span></span><code>极点 = 质心 ± h·n
+h = median(LFS邻域)
+</code></pre></div>
+
+<ul>
+<li><strong>线性退化</strong> $(\lambda_2/\lambda_1 &lt; 0.01)$：
+     使用主轴端点作为极点</li>
+</ul>
+<ol start="3">
+<li>
+<p><strong>混合策略</strong>：
+$$p^{\pm} = (1-d) \cdot p_{artificial}^{\pm} + d \cdot p_{voronoi}^{\pm}$$</p>
+</li>
+<li>
+<p><strong>稳定性增强</strong>：
+   - 使用k个最远Voronoi顶点的加权平均
+   - 权重：$w_k = \exp(-k/\tau)$
+   - 避免数值不稳定的极远顶点</p>
+</li>
+</ol>
+</details>
+<p><strong>练习 6.8</strong>（开放问题）：设计一个统一框架，自动选择Ball Pivoting、Alpha Shapes或Power Crust中最适合给定点云的方法。</p>
+<details>
+<summary>提示</summary>
+<p>分析点云特征，建立决策树。</p>
+</details>
+<details>
+<summary>答案</summary>
+<p>自动选择框架：</p>
+<ol>
+<li>
+<p><strong>特征提取</strong>：
+   - 采样均匀性：$\sigma(\text{NN distances})$
+   - 噪声水平：局部平面拟合残差
+   - 完整性：边界点比例
+   - 规模：点数n
+   - 拓扑复杂度：估计亏格</p>
+</li>
+<li>
+<p><strong>决策规则</strong>：</p>
+</li>
+</ol>
+<div class="codehilite"><pre><span></span><code><span class="k">IF</span><span class="w"> </span>采样均匀<span class="w"> </span><span class="nv">AND</span><span class="w"> </span>低噪声<span class="w"> </span><span class="nv">AND</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">100</span><span class="nv">k</span>:
+<span class="w">    </span>→<span class="w"> </span><span class="nv">Ball</span><span class="w"> </span><span class="nv">Pivoting</span>（快速、简单）
+<span class="nv">ELIF</span><span class="w"> </span>需要拓扑控制<span class="w"> </span><span class="nv">OR</span><span class="w"> </span>多尺度:
+<span class="w">    </span>→<span class="w"> </span><span class="nv">Alpha</span><span class="w"> </span><span class="nv">Shapes</span>（灵活性）
+<span class="nv">ELIF</span><span class="w"> </span>需要水密<span class="w"> </span><span class="nv">AND</span><span class="w"> </span>理论保证:
+<span class="w">    </span>→<span class="w"> </span><span class="nv">Power</span><span class="w"> </span><span class="nv">Crust</span>（鲁棒性）
+<span class="k">ELSE</span>:
+<span class="w">    </span>→<span class="w"> </span>混合方法
+</code></pre></div>
+
+<ol start="3">
+<li>
+<p><strong>混合策略</strong>：
+   - 用Power Crust获得初始水密网格
+   - 用Alpha Shapes细化局部区域
+   - 用Ball Pivoting快速填补小洞</p>
+</li>
+<li>
+<p><strong>参数自动调优</strong>：
+   - 交叉验证：留出10%点评估重建质量
+   - 网格质量度量：三角形质量、曲率一致性
+   - 贝叶斯优化寻找最优参数</p>
+</li>
+<li>
+<p><strong>性能考虑</strong>：
+   - 预计算成本 vs 重建质量权衡
+   - 用户可指定时间/质量偏好</p>
+</li>
+</ol>
+</details>
+<h2 id="gotchas">常见陷阱与错误 (Gotchas)</h2>
+<h3 id="1-ball-pivoting">1. Ball Pivoting陷阱</h3>
+<p><strong>问题</strong>：算法在尖锐特征处失败</p>
+<ul>
+<li><strong>原因</strong>：球无法同时接触特征两侧的点</li>
+<li><strong>解决</strong>：使用多个小半径 + 后处理缝合</li>
+</ul>
+<p><strong>问题</strong>：出现自相交</p>
+<ul>
+<li><strong>原因</strong>：球从多个方向访问同一区域</li>
+<li><strong>解决</strong>：维护全局访问标记，拒绝冗余三角形</li>
+</ul>
+<h3 id="2-alpha-shapes">2. Alpha Shapes陷阱</h3>
+<p><strong>问题</strong>：计算Delaunay三角化内存爆炸</p>
+<ul>
+<li><strong>原因</strong>：3D Delaunay最坏情况 $O(n^2)$ 四面体</li>
+<li><strong>解决</strong>：空间分割 + 增量构造</li>
+</ul>
+<p><strong>问题</strong>：Alpha值敏感性</p>
+<ul>
+<li><strong>原因</strong>：固定alpha不适应密度变化</li>
+<li><strong>解决</strong>：局部自适应alpha或加权版本</li>
+</ul>
+<h3 id="3-power-crust">3. Power Crust陷阱</h3>
+<p><strong>问题</strong>：边界处极点计算错误</p>
+<ul>
+<li><strong>原因</strong>：Voronoi cell无界</li>
+<li><strong>解决</strong>：添加虚拟边界点或使用截断Voronoi</li>
+</ul>
+<p><strong>问题</strong>：薄片结构产生错误拓扑</p>
+<ul>
+<li><strong>原因</strong>：内外极点混淆</li>
+<li><strong>解决</strong>：最小厚度约束 + 用户指导</li>
+</ul>
+<h3 id="4">4. 法向一致性陷阱</h3>
+<p><strong>问题</strong>：MST传播错误累积</p>
+<ul>
+<li><strong>原因</strong>：单一路径，无冗余</li>
+<li><strong>解决</strong>：多路径投票 + 置信度传播</li>
+</ul>
+<p><strong>问题</strong>：闭合曲面内外翻转</p>
+<ul>
+<li><strong>原因</strong>：缺乏全局参考</li>
+<li><strong>解决</strong>：使用包围盒射线测试确定内外</li>
+</ul>
+<h3 id="5">5. 数值稳定性陷阱</h3>
+<p><strong>问题</strong>：接近共线/共面的配置</p>
+<ul>
+<li><strong>原因</strong>：浮点精度限制</li>
+<li><strong>解决</strong>：</li>
+</ul>
+<div class="codehilite"><pre><span></span><code>使用精确谓词（exact predicates）
+符号扰动（symbolic perturbation）
+区间算术（interval arithmetic）
+</code></pre></div>
+
+<h3 id="6">6. 性能优化陷阱</h3>
+<p><strong>问题</strong>：朴素近邻查询瓶颈</p>
+<ul>
+<li><strong>原因</strong>：$O(n^2)$ 暴力搜索</li>
+<li><strong>解决</strong>：空间索引（KD-tree, Octree）+ 近似算法</li>
+</ul>
+<p>通过理解这些陷阱，可以在实际应用中避免常见错误，提高重建算法的鲁棒性和效率。</p>
+            </article>
+            
+            <nav class="page-nav"><a href="chapter5.html" class="nav-link prev">← 第5章：Poisson表面重建</a><a href="chapter7.html" class="nav-link next">第7章：神经隐式表示基础 →</a></nav>
+        </main>
+    </div>
+</body>
+</html>

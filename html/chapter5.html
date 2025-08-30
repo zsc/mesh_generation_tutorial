@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="./">
+    <title>第5章：Poisson表面重建</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="assets/highlight.css">
+    <script src="assets/script.js" defer></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']],
+                processEscapes: false,
+                packages: {'[+]': ['noerrors', 'ams']}
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            },
+            loader: {
+                load: ['[tex]/noerrors', '[tex]/ams']
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3>目录</h3>
+                <button id="sidebar-toggle" class="sidebar-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            <div class="sidebar-search">
+                <input type="text" id="sidebar-search-input" placeholder="搜索..." autocomplete="off">
+            </div>
+            <div id="tree-container">
+                <nav class="tree-nav" role="tree">
+                    <div class="tree-item " >
+                        <a href="index.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">3D 网格生成完整教程</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter1.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第1章：3D表示基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter2.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第2章：几何处理基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter3.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第3章：采样理论与重建基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter4.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第4章：Marching Cubes与体素方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item active" >
+                        <a href="chapter5.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第5章：Poisson表面重建</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter6.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第6章：基于Delaunay的重建方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter7.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第7章：神经隐式表示基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter8.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第8章：DeepSDF与Occupancy Networks</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter9.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第9章：可微分网格提取</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter10.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第10章：基于变形的网格生成</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter11.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第11章：参数化曲面方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter12.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第12章：序列生成方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter13.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第13章：3D扩散模型基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter14.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第14章：文本/图像驱动的3D生成</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter15.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第15章：前馈式快速生成</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter16.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第16章：多视图重建与新型表示</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="CLAUDE.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">1) 经典几何重建：点云/体素 → 网格</span>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </nav>
+        
+        <main class="content">
+            <article>
+                <h1 id="5poisson">第5章：Poisson表面重建</h1>
+<h2 id="_1">本章概要</h2>
+<p>Poisson表面重建是点云到网格转换中最为优雅且数学基础扎实的方法之一。本章将深入探讨如何通过求解Poisson方程，从带法向的点云数据重建出平滑的水密曲面。我们将学习指示函数的概念、梯度场的构造、Poisson方程的离散化求解，以及八叉树加速技术。最后介绍Screened Poisson方法如何在保持全局平滑性的同时更好地保留细节特征。</p>
+<p>本章学习目标：</p>
+<ul>
+<li>理解指示函数与隐式曲面表示的关系</li>
+<li>掌握从点云法向到梯度场的转换原理</li>
+<li>深入理解Poisson方程在表面重建中的作用</li>
+<li>学习八叉树自适应离散化技术</li>
+<li>了解Screened Poisson的改进机制</li>
+</ul>
+<h2 id="51">5.1 指示函数与梯度场</h2>
+<h3 id="511">5.1.1 指示函数的定义</h3>
+<p>指示函数（Indicator Function）是Poisson重建的核心概念。对于一个封闭的3D形状 $M$，其指示函数定义为：</p>
+<p>$$\chi_M(p) = \begin{cases} 
+1 &amp; \text{if } p \in \text{interior}(M) \\
+0 &amp; \text{if } p \in \text{exterior}(M)
+\end{cases}$$
+这是一个理想的二值函数，在物体边界处存在不连续跳变。实际重建中，我们寻找一个平滑的近似函数 $\tilde{\chi}$，其0.5等值面对应重建的曲面。</p>
+<h3 id="512">5.1.2 梯度场与法向的关系</h3>
+<p>指示函数在曲面附近的关键性质是：其梯度在曲面上等于外法向。数学表达为：
+$$\nabla \chi_M |_{\partial M} = \vec{n}$$
+其中 $\vec{n}$ 是曲面的单位外法向。这个性质建立了指示函数与点云法向之间的桥梁。</p>
+<div class="codehilite"><pre><span></span><code>        外部 (χ=0)
+           ↑
+      ─────┼───── 曲面 (χ=0.5)
+           │
+           ↓ ∇χ = n
+        内部 (χ=1)
+</code></pre></div>
+
+<h3 id="513">5.1.3 向量场的构造</h3>
+<p>给定带法向的点云 $\{(p_i, \vec{n}_i)\}_{i=1}^N$，我们构造一个向量场 $\vec{V}$，使其在采样点附近逼近法向场：
+$$\vec{V}(x) = \sum_{i=1}^N \vec{n}_i \cdot W(x - p_i)$$
+其中 $W$ 是权重函数，通常选择紧支撑的径向基函数。向量场 $\vec{V}$ 应当满足：</p>
+<ul>
+<li>在采样点 $p_i$ 处，$\vec{V}(p_i) \approx \vec{n}_i$</li>
+<li>在远离所有采样点的区域，$\vec{V} \to 0$</li>
+</ul>
+<h3 id="514-poisson">5.1.4 散度与Poisson方程</h3>
+<p>关键观察：如果 $\vec{V} = \nabla \tilde{\chi}$，则通过求解Poisson方程可以恢复指示函数：
+$$\Delta \tilde{\chi} = \nabla \cdot \vec{V}$$
+其中 $\Delta = \nabla^2$ 是拉普拉斯算子。这将点云重建问题转化为一个标准的偏微分方程求解问题。</p>
+<h2 id="52-poisson">5.2 Poisson方程的离散化</h2>
+<h3 id="521">5.2.1 有限差分离散化</h3>
+<p>在规则网格上，拉普拉斯算子可以用中心差分离散化：
+$$\Delta u(i,j,k) \approx \frac{1}{h^2}[u(i+1,j,k) + u(i-1,j,k) + u(i,j+1,k) + u(i,j-1,k) + u(i,j,k+1) + u(i,j,k-1) - 6u(i,j,k)]$$
+其中 $h$ 是网格间距。</p>
+<h3 id="522">5.2.2 基函数展开</h3>
+<p>更一般地，我们将解表示为基函数的线性组合：
+$$\tilde{\chi}(x) = \sum_{o \in \mathcal{O}} \chi_o B_o(x)$$
+其中 $\mathcal{O}$ 是基函数的索引集（如八叉树节点），$B_o$ 是相应的基函数，$\chi_o$ 是待求系数。</p>
+<h3 id="523-galerkin">5.2.3 Galerkin方法</h3>
+<p>使用Galerkin方法，将Poisson方程投影到基函数空间：
+$$\langle B_o, \Delta \tilde{\chi} \rangle = \langle B_o, \nabla \cdot \vec{V} \rangle$$
+利用分部积分和格林公式：
+$$-\langle \nabla B_o, \nabla \tilde{\chi} \rangle = -\langle \nabla B_o, \vec{V} \rangle$$</p>
+<h3 id="524">5.2.4 线性系统构造</h3>
+<p>代入基函数展开，得到线性系统：
+$$\sum_{o' \in \mathcal{O}} \chi_{o'} \langle \nabla B_o, \nabla B_{o'} \rangle = \langle \nabla B_o, \vec{V} \rangle$$
+矩阵形式：
+$$L\vec{\chi} = \vec{b}$$
+其中：</p>
+<ul>
+<li>$L_{o,o'} = \langle \nabla B_o, \nabla B_{o'} \rangle$ 是刚度矩阵</li>
+<li>$b_o = \langle \nabla B_o, \vec{V} \rangle$ 是右端项</li>
+<li>$\vec{\chi}$ 是待求系数向量</li>
+</ul>
+<h2 id="53">5.3 八叉树加速结构</h2>
+<h3 id="531">5.3.1 自适应空间剖分</h3>
+<p>八叉树提供了自适应的空间离散化：</p>
+<ul>
+<li>在几何细节丰富的区域使用小的叶节点</li>
+<li>在平坦区域使用大的叶节点</li>
+</ul>
+<div class="codehilite"><pre><span></span><code>    ┌───────────┐
+    │     R     │  根节点
+    └─────┬─────┘
+          │
+    ┌─────┴─────┐
+    ↓     ↓     ↓
+  ┌───┐ ┌───┐ ┌───┐
+  │ A │ │ B │ │ C │  中间层
+  └───┘ └─┬─┘ └───┘
+          │
+      ┌───┴───┐
+      ↓   ↓   ↓
+    ┌─┐ ┌─┐ ┌─┐
+    │1│ │2│ │3│  叶节点
+    └─┘ └─┘ └─┘
+</code></pre></div>
+
+<h3 id="532">5.3.2 深度确定策略</h3>
+<p>节点深度 $d$ 的确定基于：</p>
+<ol>
+<li><strong>点密度</strong>：包含点数超过阈值时细分</li>
+<li><strong>法向变化</strong>：法向变化剧烈时细分</li>
+<li><strong>最大深度限制</strong>：防止过度细分</li>
+</ol>
+<p>深度函数：
+$$d(p) = \min\{d_{max}, \max\{d_{density}(p), d_{normal}(p)\}\}$$</p>
+<h3 id="533">5.3.3 多分辨率基函数</h3>
+<p>每个八叉树节点 $o$ 对应一个三线性B样条基函数：
+$$B_o(x,y,z) = b(\frac{x-c_x^o}{w_o}) \cdot b(\frac{y-c_y^o}{w_o}) \cdot b(\frac{z-c_z^o}{w_o})$$
+其中：</p>
+<ul>
+<li>$(c_x^o, c_y^o, c_z^o)$ 是节点中心</li>
+<li>$w_o$ 是节点宽度</li>
+<li>$b(t)$ 是一维B样条基函数</li>
+</ul>
+<h3 id="534">5.3.4 跨层级耦合</h3>
+<p>相邻层级的基函数存在重叠，需要正确处理跨层级的相互作用：
+$$\langle \nabla B_{parent}, \nabla B_{child} \rangle \neq 0$$
+这导致刚度矩阵具有多分辨率结构。</p>
+<h2 id="54-screened-poisson">5.4 Screened Poisson改进</h2>
+<h3 id="541-poisson">5.4.1 原始Poisson方法的局限</h3>
+<p>传统Poisson重建过度平滑，难以保留尖锐特征。主要原因：</p>
+<ul>
+<li>全局最小二乘优化倾向于平滑解</li>
+<li>远离采样点的区域缺乏约束</li>
+<li>法向信息未充分利用点的位置信息</li>
+</ul>
+<h3 id="542-screened">5.4.2 Screened项的引入</h3>
+<p>Screened Poisson在原目标函数中加入数据项：
+$$E(\tilde{\chi}) = |\nabla \tilde{\chi} - \vec{V}|^2 + \alpha \sum_{i=1}^N |\tilde{\chi}(p_i) - 0.5|^2$$
+第二项是"screening"项，强制指示函数在采样点处接近0.5（即曲面）。</p>
+<h3 id="543">5.4.3 权重平衡策略</h3>
+<p>平衡参数 $\alpha$ 的选择至关重要：</p>
+<ul>
+<li>$\alpha$ 过小：退化为原始Poisson，过度平滑</li>
+<li>$\alpha$ 过大：过拟合噪声，失去全局一致性</li>
+</ul>
+<p>自适应策略：
+$$\alpha(p) = \alpha_0 \cdot \rho(p)^2$$
+其中 $\rho(p)$ 是点云在 $p$ 处的局部密度。</p>
+<h3 id="544">5.4.4 线性系统的修正</h3>
+<p>加入screening项后，线性系统变为：
+$$(L + \alpha S)\vec{\chi} = \vec{b} + \alpha \vec{s}$$
+其中：</p>
+<ul>
+<li>$S$ 是screening矩阵：$S_{o,o'} = \sum_i B_o(p_i)B_{o'}(p_i)$</li>
+<li>$\vec{s}$ 是screening右端项：$s_o = 0.5 \sum_i B_o(p_i)$</li>
+</ul>
+<h3 id="545">5.4.5 多重网格求解</h3>
+<p>由于系统规模巨大，通常采用多重网格方法：</p>
+<ol>
+<li><strong>限制</strong>（Restriction）：将残差从细网格传递到粗网格</li>
+<li><strong>松弛</strong>（Relaxation）：在各层级进行局部迭代</li>
+<li><strong>延拓</strong>（Prolongation）：将修正从粗网格传递到细网格</li>
+</ol>
+<p>V-cycle算法：</p>
+<div class="codehilite"><pre><span></span><code><span class="k">function</span><span class="w"> </span><span class="nf">V_cycle</span><span class="p">(</span>level, x, b<span class="p">):</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="n">level</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">coarsest</span><span class="p">:</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">direct_solve</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">level</span><span class="p">],</span><span class="w"> </span><span class="n">b</span><span class="p">)</span>
+
+<span class="w">    </span><span class="n">x</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">smooth</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">level</span><span class="p">],</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span>ν₁<span class="p">)</span><span class="w">  </span>#<span class="w"> </span>前平滑
+<span class="w">    </span><span class="n">r</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">A</span><span class="p">[</span><span class="n">level</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="w">            </span>#<span class="w"> </span>残差
+<span class="w">    </span><span class="n">r_c</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">restrict</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="w">                </span>#<span class="w"> </span>限制
+<span class="w">    </span><span class="n">e_c</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">V_cycle</span><span class="p">(</span><span class="n">level</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">r_c</span><span class="p">)</span><span class="w">   </span>#<span class="w"> </span>递归
+<span class="w">    </span><span class="n">e</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">prolongate</span><span class="p">(</span><span class="n">e_c</span><span class="p">)</span><span class="w">              </span>#<span class="w"> </span>延拓
+<span class="w">    </span><span class="n">x</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">e</span><span class="w">                        </span>#<span class="w"> </span>修正
+<span class="w">    </span><span class="n">x</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="n">smooth</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">level</span><span class="p">],</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span>ν₂<span class="p">)</span><span class="w">  </span>#<span class="w"> </span>后平滑
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">x</span>
+</code></pre></div>
+
+<h2 id="55">5.5 实现细节与优化</h2>
+<h3 id="551">5.5.1 边界条件处理</h3>
+<p>Poisson方程需要适当的边界条件：</p>
+<ol>
+<li><strong>Dirichlet条件</strong>：$\tilde{\chi}|_{\partial\Omega} = 0$（外边界设为0）</li>
+<li><strong>Neumann条件</strong>：$\frac{\partial\tilde{\chi}}{\partial n}|_{\partial\Omega} = 0$（自然边界）</li>
+</ol>
+<p>实践中常用Neumann条件，允许解在边界自由变化。</p>
+<h3 id="552">5.5.2 法向一致性</h3>
+<p>输入法向可能不一致，需要预处理：</p>
+<ol>
+<li><strong>传播法</strong>：从种子点开始，通过最小生成树传播法向</li>
+<li><strong>优化法</strong>：最小化相邻点法向的不一致性</li>
+</ol>
+<p>目标函数：
+$$E_{orient} = \sum_{(i,j) \in \mathcal{E}} w_{ij}(1 + \vec{n}_i \cdot \vec{n}_j)$$</p>
+<h3 id="553">5.5.3 置信度加权</h3>
+<p>不同采样点的可靠性不同，引入置信度权重：
+$$\vec{V}(x) = \sum_{i=1}^N c_i \vec{n}_i \cdot W(x - p_i)$$
+置信度 $c_i$ 基于：</p>
+<ul>
+<li>局部采样密度</li>
+<li>法向估计质量</li>
+<li>传感器噪声模型</li>
+</ul>
+<h3 id="554">5.5.4 等值面提取</h3>
+<p>从重建的指示函数提取0.5等值面：</p>
+<ol>
+<li><strong>Marching Cubes</strong>：在均匀网格上提取</li>
+<li><strong>Adaptive extraction</strong>：在八叉树上自适应提取</li>
+<li><strong>Dual Contouring</strong>：生成更好的尖锐特征</li>
+</ol>
+<p>提取时的优化：</p>
+<ul>
+<li>使用查找表加速</li>
+<li>并行化处理</li>
+<li>顶点位置的二次优化</li>
+</ul>
+<h2 id="_2">本章小结</h2>
+<p>Poisson表面重建通过优雅的数学框架实现了从点云到网格的转换：</p>
+<p><strong>核心概念</strong>：</p>
+<ul>
+<li>指示函数 $\chi$ 隐式表示3D形状</li>
+<li>梯度场 $\nabla\chi$ 与表面法向的对应关系</li>
+<li>Poisson方程 $\Delta\chi = \nabla \cdot \vec{V}$ 连接法向与曲面</li>
+</ul>
+<p><strong>关键技术</strong>：</p>
+<ul>
+<li>八叉树自适应离散化实现多分辨率</li>
+<li>Galerkin方法将PDE转化为线性系统</li>
+<li>Screened项平衡全局平滑与局部拟合</li>
+<li>多重网格方法高效求解大规模系统</li>
+</ul>
+<p><strong>主要公式汇总</strong>：</p>
+<ol>
+<li>Poisson方程：$\Delta\tilde{\chi} = \nabla \cdot \vec{V}$</li>
+<li>Screened目标函数：$E = |\nabla\tilde{\chi} - \vec{V}|^2 + \alpha\sum_i|\tilde{\chi}(p_i) - 0.5|^2$</li>
+<li>线性系统：$(L + \alpha S)\vec{\chi} = \vec{b} + \alpha\vec{s}$</li>
+<li>刚度矩阵：$L_{o,o'} = \langle\nabla B_o, \nabla B_{o'}\rangle$</li>
+</ol>
+<p>Poisson重建的优势在于全局优化带来的鲁棒性和水密性保证，而Screened改进则在保持这些优点的同时提升了细节保真度。</p>
+<h2 id="gotchas">常见陷阱与错误 (Gotchas)</h2>
+<h3 id="1">1. 法向方向不一致</h3>
+<p><strong>问题</strong>：点云法向朝向混乱，导致重建失败或产生错误拓扑
+<strong>症状</strong>：重建结果出现大量孔洞或内外翻转
+<strong>解决</strong>：</p>
+<ul>
+<li>使用最小生成树进行法向传播</li>
+<li>检查法向与视点的一致性</li>
+<li>对称物体需要特殊处理</li>
+</ul>
+<h3 id="2">2. 八叉树深度设置不当</h3>
+<p><strong>问题</strong>：深度过浅丢失细节，过深导致过拟合噪声
+<strong>症状</strong>：表面过度平滑或出现高频噪声
+<strong>解决</strong>：</p>
+<ul>
+<li>根据点云密度自适应设置深度</li>
+<li>典型范围：8-12层</li>
+<li>使用交叉验证确定最优深度</li>
+</ul>
+<h3 id="3-screened">3. Screened权重失衡</h3>
+<p><strong>问题</strong>：α参数设置不当导致欠拟合或过拟合
+<strong>症状</strong>：表面偏离点云或产生振荡
+<strong>调试技巧</strong>：</p>
+<div class="codehilite"><pre><span></span><code>α太小 → 表面过度平滑，远离采样点
+α太大 → 表面振荡，过拟合噪声
+α适中 → 平衡全局平滑与局部细节
+</code></pre></div>
+
+<h3 id="4">4. 边界伪影</h3>
+<p><strong>问题</strong>：重建边界出现不自然的突起或凹陷
+<strong>原因</strong>：边界条件设置不当或点云覆盖不完整
+<strong>解决</strong>：</p>
+<ul>
+<li>扩展包围盒，给边界留出缓冲区</li>
+<li>使用Neumann边界条件</li>
+<li>补充虚拟边界点</li>
+</ul>
+<h3 id="5">5. 内存溢出</h3>
+<p><strong>问题</strong>：大规模点云导致内存不足
+<strong>症状</strong>：程序崩溃或极度缓慢
+<strong>优化策略</strong>：</p>
+<ul>
+<li>使用out-of-core算法</li>
+<li>分块处理后合并</li>
+<li>稀疏矩阵存储优化</li>
+</ul>
+<h3 id="6">6. 数值稳定性</h3>
+<p><strong>问题</strong>：矩阵病态导致求解不稳定
+<strong>症状</strong>：迭代不收敛或解包含NaN
+<strong>处理方法</strong>：</p>
+<ul>
+<li>添加正则化项：$(L + \epsilon I)$</li>
+<li>使用预条件子</li>
+<li>检查基函数的条件数</li>
+</ul>
+<h3 id="7">7. 拓扑错误</h3>
+<p><strong>问题</strong>：生成非流形网格或自相交
+<strong>原因</strong>：等值面提取的二义性
+<strong>修复</strong>：</p>
+<ul>
+<li>使用改进的Marching Cubes变体</li>
+<li>后处理拓扑修复</li>
+<li>调整等值面阈值（不一定是0.5）</li>
+</ul>
+<h3 id="8">8. 性能瓶颈诊断</h3>
+<p><strong>常见瓶颈及优化</strong>：</p>
+<div class="codehilite"><pre><span></span><code>构造八叉树 (15-25%) → 并行化、空间哈希
+构造矩阵 (20-30%) → 利用对称性、稀疏存储
+求解系统 (40-50%) → 多重网格、GPU加速
+等值面提取 (10-15%) → 并行Marching Cubes
+</code></pre></div>
+
+<h2 id="_3">练习题</h2>
+<h3 id="_4">基础题</h3>
+<h4 id="51_1">练习5.1：指示函数性质</h4>
+<p>证明对于封闭曲面 $M$，其指示函数 $\chi_M$ 的梯度在曲面上垂直于曲面。</p>
+<p><strong>Hint</strong>: 考虑指示函数的等值面族 $\chi_M(x) = c$ 以及梯度与等值面的关系。</p>
+<details>
+<summary>参考答案</summary>
+<p>证明：</p>
+<ol>
+<li>对于曲面 $\partial M$，有 $\chi_M|_{\partial M} = 0.5$（约定）</li>
+<li>曲面可视为指示函数的0.5等值面</li>
+<li>对于任意等值面 $f(x) = c$，梯度 $\nabla f$ 垂直于等值面</li>
+<li>因此 $\nabla \chi_M$ 在 $\partial M$ 上垂直于曲面</li>
+<li>由于 $\chi_M$ 从内部（值=1）向外部（值=0）递减，梯度指向外法向方向</li>
+<li>归一化后：$\nabla \chi_M / |\nabla \chi_M| = \vec{n}$（单位外法向）</li>
+</ol>
+<p>关键洞察：指示函数将3D曲面隐式编码为标量场的等值面，梯度自然编码了法向信息。</p>
+</details>
+<h4 id="52poisson">练习5.2：Poisson方程推导</h4>
+<p>从向量场 $\vec{V} = \nabla \tilde{\chi}$ 出发，推导Poisson方程 $\Delta \tilde{\chi} = \nabla \cdot \vec{V}$。</p>
+<p><strong>Hint</strong>: 利用向量恒等式 $\nabla \cdot (\nabla f) = \Delta f$。</p>
+<details>
+<summary>参考答案</summary>
+<p>推导过程：</p>
+<ol>
+<li>给定：$\vec{V} = \nabla \tilde{\chi}$</li>
+<li>两边取散度：$\nabla \cdot \vec{V} = \nabla \cdot (\nabla \tilde{\chi})$</li>
+<li>应用恒等式：$\nabla \cdot (\nabla \tilde{\chi}) = \Delta \tilde{\chi}$</li>
+<li>得到：$\Delta \tilde{\chi} = \nabla \cdot \vec{V}$</li>
+</ol>
+<p>物理意义：</p>
+<ul>
+<li>左边：指示函数的拉普拉斯（曲率信息）</li>
+<li>右边：向量场的散度（源/汇分布）</li>
+<li>Poisson方程建立了两者的平衡关系</li>
+</ul>
+<p>这是调和分析的基本结果，保证了从法向场重建出平滑的隐式曲面。</p>
+</details>
+<h4 id="53_1">练习5.3：八叉树复杂度分析</h4>
+<p>设点云有 $N$ 个点，八叉树最大深度为 $D$，分析构造八叉树的时间复杂度。</p>
+<p><strong>Hint</strong>: 考虑每个点的插入成本和树的最大节点数。</p>
+<details>
+<summary>参考答案</summary>
+<p>时间复杂度分析：</p>
+<ol>
+<li>单点插入：从根到叶遍历，最多 $D$ 层，$O(D)$</li>
+<li>$N$ 个点插入：$O(ND)$</li>
+<li>节点细分检查：每个节点最多检查一次，总节点数 $O(N)$（平均情况）</li>
+<li>总复杂度：$O(ND)$</li>
+</ol>
+<p>空间复杂度：</p>
+<ul>
+<li>最坏情况（所有点分散）：$O(N)$ 个叶节点</li>
+<li>内部节点：$O(N/7)$（八叉树性质）</li>
+<li>总空间：$O(N)$</li>
+</ul>
+<p>实际优化：</p>
+<ul>
+<li>使用Morton编码预排序：可将构造优化到 $O(N\log N)$</li>
+<li>并行构造：使用空间哈希避免锁竞争</li>
+<li>自底向上构造：先创建叶节点再合并</li>
+</ul>
+<p>典型参数：$D = 8-12$，因此复杂度近似线性。</p>
+</details>
+<h4 id="54screened">练习5.4：Screened权重选择</h4>
+<p>解释为什么Screened Poisson中的权重 $\alpha$ 应该与局部点密度的平方成正比。</p>
+<p><strong>Hint</strong>: 考虑不同密度区域的相对贡献。</p>
+<details>
+<summary>参考答案</summary>
+<p>理论分析：</p>
+<ol>
+<li>点密度 $\rho$ 表示单位体积内的点数</li>
+<li>梯度约束项贡献：$|\nabla \tilde{\chi} - \vec{V}|^2 \propto \rho$（更多点产生更强的梯度约束）</li>
+<li>Screening项贡献：$\sum_i |\tilde{\chi}(p_i) - 0.5|^2 \propto N_{local} \propto \rho \cdot V$</li>
+<li>为平衡两项在不同密度区域的相对权重：
+   - 梯度项：$\rho$
+   - Screening项：$\alpha \cdot \rho$</li>
+<li>要使比例保持一致：$\alpha \propto \rho$</li>
+</ol>
+<p>但实践中发现 $\alpha \propto \rho^2$ 效果更好，原因：</p>
+<ul>
+<li>高密度区域通常包含更可靠的几何信息</li>
+<li>平方关系提供更强的局部约束</li>
+<li>补偿数值离散化误差</li>
+</ul>
+<p>这种自适应权重避免了全局统一 $\alpha$ 导致的密度偏差。</p>
+</details>
+<h3 id="_5">挑战题</h3>
+<h4 id="55_1">练习5.5：多重网格收敛性分析</h4>
+<p>证明V-cycle多重网格方法的收敛率与网格层数无关（网格无关收敛性）。</p>
+<p><strong>Hint</strong>: 分析高频和低频误差分量的衰减率。</p>
+<details>
+<summary>参考答案</summary>
+<p>收敛性证明概要：</p>
+<ol>
+<li>
+<p><strong>误差分解</strong>：
+   - 误差 $e = e_H + e_L$（高频+低频分量）
+   - 高频：波长 $\sim h$（网格间距）
+   - 低频：波长 $&gt;&gt; h$</p>
+</li>
+<li>
+<p><strong>松弛器作用</strong>：
+   - Gauss-Seidel/Jacobi快速衰减高频：$|e_H^{new}| \leq \sigma|e_H|$，$\sigma &lt; 1$
+   - 低频分量衰减慢：$|e_L^{new}| \approx |e_L|$</p>
+</li>
+<li>
+<p><strong>粗网格校正</strong>：
+   - 限制算子：将低频误差映射到粗网格（在粗网格上变成高频）
+   - 粗网格求解：有效消除原低频误差
+   - 延拓算子：将校正传回细网格</p>
+</li>
+<li>
+<p><strong>两网格分析</strong>：
+   收敛因子 $\rho = |(I - M_c)(I - M_s)|$
+   其中 $M_s$ 是松弛算子，$M_c$ 是粗网格校正算子</p>
+</li>
+<li>
+<p><strong>递归V-cycle</strong>：
+   - 每层的收敛率类似
+   - 总收敛率 $\rho_V \approx \rho^{L}$（$L$是V的层数）
+   - 关键：$\rho$ 与网格大小无关！</p>
+</li>
+<li>
+<p><strong>结论</strong>：
+   V-cycle收敛率主要由松弛器的平滑性质和网格转移算子的逼近性质决定，而非问题规模，实现了 $O(N)$ 的最优复杂度。</p>
+</li>
+</ol>
+</details>
+<h4 id="56">练习5.6：自适应八叉树优化</h4>
+<p>设计一个基于曲率的自适应细分准则，使八叉树在几何特征丰富的区域自动加密。</p>
+<p><strong>Hint</strong>: 利用法向变化率估计局部曲率。</p>
+<details>
+<summary>参考答案</summary>
+<p>自适应细分算法：</p>
+<ol>
+<li>
+<p><strong>局部曲率估计</strong>：
+   对于节点 $o$ 包含的点集 $\{p_i\}$：
+$$\kappa_o = \frac{1}{|P_o|} \sum_{i,j \in P_o} |\vec{n}_i - \vec{n}_j| / |p_i - p_j|$$</p>
+</li>
+<li>
+<p><strong>多尺度特征检测</strong>：
+$$F_o = \max\{\kappa_o \cdot w_o, \sigma_n, \rho_o / \rho_{avg}\}$$
+其中：</p>
+</li>
+</ol>
+<ul>
+<li>$w_o$：节点宽度（尺度因子）</li>
+<li>$\sigma_n$：法向标准差</li>
+<li>$\rho_o/\rho_{avg}$：相对密度</li>
+</ul>
+<ol start="3">
+<li><strong>递归细分准则</strong>：</li>
+</ol>
+<div class="codehilite"><pre><span></span><code>if (F_o &gt; τ(d)) and (d &lt; d_max):
+    subdivide(o)
+</code></pre></div>
+
+<p>其中 $\tau(d) = \tau_0 \cdot 2^{-\beta d}$（深度自适应阈值）</p>
+<ol start="4">
+<li>
+<p><strong>特征保持优化</strong>：
+   - 边缘检测：$E_o = \max_{i,j}|\vec{n}_i^T \vec{n}_j|$
+   - 角点检测：主成分分析法向分布
+   - 强制细分：$E_o &gt; 0.9$ 时必须细分</p>
+</li>
+<li>
+<p><strong>平衡策略</strong>：
+   - 相邻节点深度差 $\leq 1$（2:1平衡）
+   - 防止过度细分：设置最小点数阈值</p>
+</li>
+</ol>
+<p>该方法确保计算资源集中在几何复杂区域，同时保持整体效率。</p>
+</details>
+<h4 id="57">练习5.7：边界条件影响分析</h4>
+<p>比较Dirichlet和Neumann边界条件对Poisson重建结果的影响，特别是在开放曲面的情况下。</p>
+<p><strong>Hint</strong>: 从能量最小化角度分析不同边界条件的约束作用。</p>
+<details>
+<summary>参考答案</summary>
+<p>边界条件对比分析：</p>
+<ol>
+<li>
+<p><strong>Dirichlet条件</strong> $\tilde{\chi}|_{\partial\Omega} = 0$：
+   - <strong>优点</strong>：</p>
+<ul>
+<li>强制外边界为0，保证封闭性</li>
+<li>解唯一确定</li>
+<li>远离物体的区域自然衰减到0</li>
+<li><strong>缺点</strong>：</li>
+<li>边界附近可能产生不自然的"吸附"效应</li>
+<li>开放曲面被强制封闭</li>
+<li>边界位置敏感</li>
+</ul>
+</li>
+<li>
+<p><strong>Neumann条件</strong> $\frac{\partial\tilde{\chi}}{\partial n}|_{\partial\Omega} = 0$：
+   - <strong>优点</strong>：</p>
+<ul>
+<li>允许解在边界自由浮动</li>
+<li>更好地保持开放曲面</li>
+<li>减少边界伪影</li>
+<li><strong>缺点</strong>：</li>
+<li>解相差一个常数（需额外约束）</li>
+<li>可能产生"漂移"</li>
+<li>数值稳定性稍差</li>
+</ul>
+</li>
+<li>
+<p><strong>混合策略</strong>：</p>
+</li>
+</ol>
+<div class="codehilite"><pre><span></span><code>底面：Dirichlet（固定参考）
+侧面：Neumann（自由边界）
+顶面：Robin（混合条件）
+</code></pre></div>
+
+<ol start="4">
+<li>
+<p><strong>开放曲面特殊处理</strong>：
+   - 检测边界环
+   - 局部修改权重：$\alpha_{boundary} = 0$
+   - 虚拟封闭：添加虚拟点形成封闭</p>
+</li>
+<li>
+<p><strong>实验对比</strong>：
+   - 封闭物体：Dirichlet更稳定
+   - 地形/浮雕：Neumann更自然
+   - 一般场景：混合边界最优</p>
+</li>
+</ol>
+<p>选择建议：根据数据特性和应用需求权衡。大多数实际系统采用Neumann配合适当的正则化。</p>
+</details>
+<h4 id="58">练习5.8：数值精度与稳定性</h4>
+<p>分析Poisson系统的条件数，提出改善数值稳定性的预条件子设计。</p>
+<p><strong>Hint</strong>: 考虑多分辨率基函数导致的尺度差异。</p>
+<details>
+<summary>参考答案</summary>
+<p>条件数分析与预条件子设计：</p>
+<ol>
+<li>
+<p><strong>条件数问题来源</strong>：
+   - 八叉树多分辨率：不同层级基函数支撑差异 $2^D$ 倍
+   - 刚度矩阵条件数：$\kappa(L) = O(h^{-2}) = O(4^D)$
+   - 深度 $D=10$ 时：$\kappa \approx 10^6$，数值不稳定</p>
+</li>
+<li>
+<p><strong>对角预条件子</strong>：
+$$P_{diag} = diag(L)^{-1}$$
+效果有限，仅规范化不同尺度</p>
+</li>
+<li>
+<p><strong>不完全Cholesky分解（ICF）</strong>：
+$$L \approx \tilde{L}\tilde{L}^T, \quad P_{ICF} = (\tilde{L}\tilde{L}^T)^{-1}$$</p>
+</li>
+</ol>
+<ul>
+<li>保持稀疏模式</li>
+<li>条件数改善：$\kappa(P_{ICF}L) = O(h^{-1})$</li>
+</ul>
+<ol start="4">
+<li><strong>多重网格预条件子</strong>：
+$$P_{MG} = (I - M_L)...(I - M_1)$$</li>
+</ol>
+<ul>
+<li>利用层级结构</li>
+<li>近似最优：$\kappa(P_{MG}L) = O(1)$</li>
+</ul>
+<ol start="5">
+<li>
+<p><strong>代数多重网格（AMG）</strong>：
+   - 自动构造粗化层级
+   - 强连接检测：$|L_{ij}| &gt; \theta\max_k|L_{ik}|$
+   - 鲁棒性最好，适合不规则网格</p>
+</li>
+<li>
+<p><strong>实用混合策略</strong>：</p>
+</li>
+</ol>
+<div class="codehilite"><pre><span></span><code>预处理：对角缩放 + 行平衡
+迭代求解：PCG + AMG预条件子
+容错机制：检测停滞，切换到直接法
+</code></pre></div>
+
+<ol start="7">
+<li><strong>数值技巧</strong>：
+   - 使用extended precision累加器
+   - Kahan求和算法减少舍入误差
+   - 残差正交化（GMRES）</li>
+</ol>
+<p>实践建议：AMG预条件的PCG方法提供最佳的鲁棒性/效率平衡。</p>
+</details>
+            </article>
+            
+            <nav class="page-nav"><a href="chapter4.html" class="nav-link prev">← 第4章：Marching Cubes与体素方法</a><a href="chapter6.html" class="nav-link next">第6章：基于Delaunay的重建方法 →</a></nav>
+        </main>
+    </div>
+</body>
+</html>

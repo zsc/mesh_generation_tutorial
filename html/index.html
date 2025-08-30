@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="./">
+    <title>3D 网格生成完整教程</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="assets/highlight.css">
+    <script src="assets/script.js" defer></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']],
+                processEscapes: false,
+                packages: {'[+]': ['noerrors', 'ams']}
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            },
+            loader: {
+                load: ['[tex]/noerrors', '[tex]/ams']
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3>目录</h3>
+                <button id="sidebar-toggle" class="sidebar-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            <div class="sidebar-search">
+                <input type="text" id="sidebar-search-input" placeholder="搜索..." autocomplete="off">
+            </div>
+            <div id="tree-container">
+                <nav class="tree-nav" role="tree">
+                    <div class="tree-item active" >
+                        <a href="index.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">3D 网格生成完整教程</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter1.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第1章：3D表示基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter2.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第2章：几何处理基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter3.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第3章：采样理论与重建基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter4.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第4章：Marching Cubes与体素方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter5.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第5章：Poisson表面重建</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter6.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第6章：基于Delaunay的重建方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter7.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第7章：神经隐式表示基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter8.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第8章：DeepSDF与Occupancy Networks</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter9.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第9章：可微分网格提取</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter10.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第10章：基于变形的网格生成</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter11.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第11章：参数化曲面方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter12.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第12章：序列生成方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter13.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第13章：3D扩散模型基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter14.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第14章：文本/图像驱动的3D生成</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter15.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第15章：前馈式快速生成</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter16.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第16章：多视图重建与新型表示</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="CLAUDE.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">1) 经典几何重建：点云/体素 → 网格</span>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </nav>
+        
+        <main class="content">
+            <article>
+                <h1 id="3d">3D 网格生成完整教程</h1>
+<h2 id="_1">关于本教程</h2>
+<p>本教程系统介绍3D网格生成的理论基础与实践方法，涵盖从经典几何重建到最新深度学习方法的完整技术栈。教程面向资深工程师和AI科学家，强调数学原理与算法细节的深入理解。</p>
+<p>每章包含大量练习题和参考答案，帮助读者巩固理论知识并培养实践能力。本教程不包含代码实现，重点在于算法原理、数学推导和概念理解。</p>
+<h2 id="_2">目标读者</h2>
+<ul>
+<li>计算机图形学研究人员</li>
+<li>深度学习工程师（3D视觉方向）</li>
+<li>游戏引擎开发者</li>
+<li>CAD/CAM系统开发者</li>
+<li>机器人视觉工程师</li>
+<li>具有扎实数学基础的技术人员</li>
+</ul>
+<h2 id="_3">章节概览</h2>
+<h3 id="_4">第一部分：基础理论</h3>
+<h4 id="13d"><a href="chapter1.html">第1章：3D表示基础</a></h4>
+<ul>
+<li>网格的数学定义与数据结构</li>
+<li>点云、体素、隐式场的对比</li>
+<li>拓扑学基础：流形、亏格、欧拉特征</li>
+<li>半边数据结构与网格操作</li>
+</ul>
+<h4 id="2"><a href="chapter2.html">第2章：几何处理基础</a></h4>
+<ul>
+<li>离散微分几何</li>
+<li>曲率计算与法向估计</li>
+<li>拉普拉斯算子与谱分析</li>
+<li>网格参数化理论</li>
+</ul>
+<h4 id="3"><a href="chapter3.html">第3章：采样理论与重建基础</a></h4>
+<ul>
+<li>Nyquist-Shannon采样定理在3D中的应用</li>
+<li>Voronoi图与Delaunay三角化</li>
+<li>点云采样策略</li>
+<li>重建的适定性分析</li>
+</ul>
+<h3 id="_5">第二部分：经典几何重建</h3>
+<h4 id="4marching-cubes"><a href="chapter4.html">第4章：Marching Cubes与体素方法</a></h4>
+<ul>
+<li>Marching Cubes算法详解</li>
+<li>二义性问题与解决方案</li>
+<li>Dual Contouring与扩展方法</li>
+<li>自适应网格细化</li>
+</ul>
+<h4 id="5poisson"><a href="chapter5.html">第5章：Poisson表面重建</a></h4>
+<ul>
+<li>指示函数与梯度场</li>
+<li>Poisson方程的离散化</li>
+<li>八叉树加速结构</li>
+<li>Screened Poisson改进</li>
+</ul>
+<h4 id="6delaunay"><a href="chapter6.html">第6章：基于Delaunay的重建方法</a></h4>
+<ul>
+<li>Ball Pivoting算法</li>
+<li>Alpha shapes理论</li>
+<li>Power crust与紧致曲面</li>
+<li>法向一致性处理</li>
+</ul>
+<h3 id="_6">第三部分：学习式隐式场方法</h3>
+<h4 id="7"><a href="chapter7.html">第7章：神经隐式表示基础</a></h4>
+<ul>
+<li>连续函数的神经网络逼近</li>
+<li>符号距离场（SDF）表示</li>
+<li>占据场与截断SDF</li>
+<li>位置编码与频率分析</li>
+</ul>
+<h4 id="8deepsdfoccupancy-networks"><a href="chapter8.html">第8章：DeepSDF与Occupancy Networks</a></h4>
+<ul>
+<li>自编码器架构设计</li>
+<li>隐空间优化技术</li>
+<li>条件化策略</li>
+<li>训练技巧与损失函数设计</li>
+</ul>
+<h4 id="9"><a href="chapter9.html">第9章：可微分网格提取</a></h4>
+<ul>
+<li>DMTet算法原理</li>
+<li>可微Marching Tetrahedra</li>
+<li>梯度反传与网格优化</li>
+<li>拓扑一致性保证</li>
+</ul>
+<h3 id="_7">第四部分：显式网格生成</h3>
+<h4 id="10"><a href="chapter10.html">第10章：基于变形的网格生成</a></h4>
+<ul>
+<li>模板变形理论</li>
+<li>Pixel2Mesh架构</li>
+<li>图卷积网络在网格上的应用</li>
+<li>多分辨率细化策略</li>
+</ul>
+<h4 id="11"><a href="chapter11.html">第11章：参数化曲面方法</a></h4>
+<ul>
+<li>AtlasNet原理</li>
+<li>多片拼接策略</li>
+<li>UV映射与纹理生成</li>
+<li>曲面连续性分析</li>
+</ul>
+<h4 id="12"><a href="chapter12.html">第12章：序列生成方法</a></h4>
+<ul>
+<li>PolyGen与自回归模型</li>
+<li>顶点-面序列表示</li>
+<li>Transformer在3D生成中的应用</li>
+<li>约束采样与有效性保证</li>
+</ul>
+<h3 id="_8">第五部分：扩散模型与优化方法</h3>
+<h4 id="133d"><a href="chapter13.html">第13章：3D扩散模型基础</a></h4>
+<ul>
+<li>扩散过程的数学原理</li>
+<li>Score-based生成模型</li>
+<li>3D数据的噪声调度</li>
+<li>条件生成与引导</li>
+</ul>
+<h4 id="143d"><a href="chapter14.html">第14章：文本/图像驱动的3D生成</a></h4>
+<ul>
+<li>DreamFusion与SDS损失</li>
+<li>VSD改进算法</li>
+<li>可微渲染与2D监督</li>
+<li>多视角一致性</li>
+</ul>
+<h4 id="15"><a href="chapter15.html">第15章：前馈式快速生成</a></h4>
+<ul>
+<li>GET3D架构设计</li>
+<li>InstantMesh/LRM方法</li>
+<li>三平面表示</li>
+<li>实时推理优化</li>
+</ul>
+<h3 id="_9">第六部分：高级主题</h3>
+<h4 id="16"><a href="chapter16.html">第16章：多视图重建与新型表示</a></h4>
+<ul>
+<li>SfM+MVS管线</li>
+<li>3D Gaussian Splatting</li>
+<li>神经辐射场（NeRF）到网格</li>
+<li>混合表示与未来趋势</li>
+</ul>
+<h2 id="_10">学习路径建议</h2>
+<h3 id="_11">初学者路径</h3>
+<p>1-2-3-4-5 → 7-8 → 10 → 13-14</p>
+<h3 id="_12">工程实践路径</h3>
+<p>1-4-5-6 → 9-10-11 → 15-16</p>
+<h3 id="_13">研究者路径</h3>
+<p>1-2-3 → 7-8-9 → 12-13-14 → 16</p>
+<h2 id="_14">预备知识</h2>
+<ul>
+<li><strong>数学基础</strong>：线性代数、微积分、概率论、数值分析</li>
+<li><strong>计算机图形学</strong>：基本渲染管线、变换矩阵、光照模型</li>
+<li><strong>机器学习</strong>：神经网络基础、优化理论、深度学习框架</li>
+<li><strong>编程基础</strong>：数据结构与算法、并行计算概念</li>
+</ul>
+<h2 id="_15">评测基准与数据集</h2>
+<p>本教程使用以下标准数据集进行算法评测：</p>
+<ul>
+<li><strong>ShapeNet/ShapeNetPart</strong>：大规模3D形状数据库</li>
+<li><strong>Objaverse/Objaverse-XL</strong>：多样化3D资产集合</li>
+<li><strong>Thingi10K</strong>：3D打印模型数据集</li>
+<li><strong>ModelNet40</strong>：CAD模型分类数据集</li>
+<li><strong>ABC Dataset</strong>：CAD曲线与曲面数据</li>
+</ul>
+<p>评测指标包括：</p>
+<ul>
+<li>Chamfer距离（L1/L2）</li>
+<li>F-Score（不同阈值）</li>
+<li>IoU（体积交并比）</li>
+<li>法向一致性</li>
+<li>拓扑正确性</li>
+</ul>
+<h2 id="_16">工具与资源</h2>
+<h3 id="_17">推荐软件工具</h3>
+<ul>
+<li><strong>MeshLab</strong>：网格处理与可视化</li>
+<li><strong>CloudCompare</strong>：点云处理</li>
+<li><strong>Blender</strong>：3D建模与渲染</li>
+<li><strong>Open3D</strong>：3D数据处理库</li>
+<li><strong>PyTorch3D/Kaolin</strong>：深度学习3D框架</li>
+</ul>
+<h3 id="_18">参考文献数据库</h3>
+<ul>
+<li>计算机图形学顶会：SIGGRAPH, SIGGRAPH Asia, Eurographics</li>
+<li>计算机视觉顶会：CVPR, ICCV, ECCV</li>
+<li>机器学习顶会：NeurIPS, ICML, ICLR</li>
+<li>专门期刊：TOG, TVCG, CGF, IJCV</li>
+</ul>
+<h2 id="_19">如何使用本教程</h2>
+<ol>
+<li><strong>顺序学习</strong>：按章节顺序学习，确保基础扎实</li>
+<li><strong>练习驱动</strong>：每章完成至少80%的练习题</li>
+<li><strong>理论联系实践</strong>：结合实际项目深化理解</li>
+<li><strong>讨论交流</strong>：参与社区讨论，分享学习心得</li>
+<li><strong>持续更新</strong>：关注领域最新进展，及时补充知识</li>
+</ol>
+<h2 id="_20">版权与引用</h2>
+<p>本教程采用CC BY-NC-SA 4.0协议发布。学术引用请使用：</p>
+<div class="codehilite"><pre><span></span><code><span class="nc">@misc</span><span class="p">{</span><span class="nl">mesh_generation_tutorial_2024</span><span class="p">,</span>
+<span class="w">  </span><span class="na">title</span><span class="p">=</span><span class="s">{3D网格生成完整教程}</span><span class="p">,</span>
+<span class="w">  </span><span class="na">author</span><span class="p">=</span><span class="s">{Tutorial Authors}</span><span class="p">,</span>
+<span class="w">  </span><span class="na">year</span><span class="p">=</span><span class="s">{2024}</span><span class="p">,</span>
+<span class="w">  </span><span class="na">url</span><span class="p">=</span><span class="s">{https://github.com/yourusername/mesh_generation_tutorial}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h2 id="_21">更新日志</h2>
+<ul>
+<li>2024.01：初始版本发布，包含16章核心内容</li>
+<li>持续更新中...</li>
+</ul>
+<hr />
+<p>开始学习：<a href="chapter1.html">第1章：3D表示基础</a> →</p>
+            </article>
+            
+            <nav class="page-nav"><a href="chapter1.html" class="nav-link next">第1章：3D表示基础 →</a></nav>
+        </main>
+    </div>
+</body>
+</html>

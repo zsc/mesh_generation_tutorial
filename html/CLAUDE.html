@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="./">
+    <title>1) 经典几何重建：点云/体素 → 网格</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="assets/highlight.css">
+    <script src="assets/script.js" defer></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']],
+                processEscapes: false,
+                packages: {'[+]': ['noerrors', 'ams']}
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            },
+            loader: {
+                load: ['[tex]/noerrors', '[tex]/ams']
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3>目录</h3>
+                <button id="sidebar-toggle" class="sidebar-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            <div class="sidebar-search">
+                <input type="text" id="sidebar-search-input" placeholder="搜索..." autocomplete="off">
+            </div>
+            <div id="tree-container">
+                <nav class="tree-nav" role="tree">
+                    <div class="tree-item " >
+                        <a href="index.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">3D 网格生成完整教程</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter1.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第1章：3D表示基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter2.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第2章：几何处理基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter3.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第3章：采样理论与重建基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter4.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第4章：Marching Cubes与体素方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter5.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第5章：Poisson表面重建</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter6.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第6章：基于Delaunay的重建方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter7.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第7章：神经隐式表示基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter8.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第8章：DeepSDF与Occupancy Networks</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter9.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第9章：可微分网格提取</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter10.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第10章：基于变形的网格生成</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter11.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第11章：参数化曲面方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter12.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第12章：序列生成方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter13.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第13章：3D扩散模型基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter14.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第14章：文本/图像驱动的3D生成</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter15.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第15章：前馈式快速生成</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter16.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第16章：多视图重建与新型表示</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item active" >
+                        <a href="CLAUDE.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">1) 经典几何重建：点云/体素 → 网格</span>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </nav>
+        
+        <main class="content">
+            <article>
+                <p>（交流可以用英文，所有文档中文，保留这句）</p>
+<h2 id="_1">项目目标</h2>
+<p>编写一份3D mesh 生成的中文教程markdown，要包含大量的习题和参考答案（答案默认折叠）。</p>
+<p>文件组织是 index.md + chapter1.md + ...</p>
+<h2 id="audience">Audience</h2>
+<p>verteran engineer and AI scientist</p>
+<h2 id="_2">章节结构要求</h2>
+<p>每个章节应包含：</p>
+<ol>
+<li><strong>开篇段落</strong>：简要介绍本章内容和学习目标</li>
+<li><strong>文字论述</strong>：以文字论述为主，适当配上ASCII 图说明。使用公式时用 latex. 不写代码</li>
+<li><strong>本章小结</strong>：总结关键概念和公式</li>
+<li><strong>练习题</strong>：
+   - 每章包含6-8道练习题
+   - 50%基础题（帮助熟悉材料）
+   - 50%挑战题（包括开放性思考题）
+   - 每题提供提示（Hint）
+   - 答案默认折叠，不包含代码</li>
+<li><strong>常见陷阱与错误</strong> (Gotchas)：每章包含该主题的常见错误和调试技巧</li>
+</ol>
+<h2 id="_3">内容</h2>
+<p>下面把“3D 网格（mesh）生成”的主要流派，按<strong>表示方式/训练范式</strong>来梳理，并配上代表性论文与优缺点，便于选型。</p>
+<h1 id="1">1) 经典几何重建：点云/体素 → 网格</h1>
+<p><strong>思路</strong>：从点云或体素场中直接抽取等值面。
+<strong>代表</strong>：</p>
+<ul>
+<li><strong>Marching Cubes</strong>：体素等值面抽取的鼻祖，用于医学与体数据，速度快、实现简单。([cs.toronto.edu][1], [ACM Digital Library][2])</li>
+<li><strong>Poisson Surface Reconstruction / Screened Poisson</strong>：从<strong>有法向的点云</strong>全局求解水密曲面，鲁棒且平滑；Screened 版本更易保细节。([hhoppe.com][3], [Department of Computer Science][4])</li>
+<li><strong>Ball Pivoting / α-shapes / Delaunay</strong>：几何/拓扑法，从点云生长或基于 Delaunay 结构重建。([mesh.brown.edu][5], [Department of Computer Science][6])
+  <strong>优缺点</strong>：稳健、省训练，但<strong>不能凭空“造物”</strong>，依赖高质量采样/法向；常配合摄影测量或激光扫描。</li>
+</ul>
+<h1 id="2">2) 隐式场 → 网格（学习式</h1>
+<p><strong>思路</strong>：学一个连续隐式函数（SDF/占据场），再用 MC/MT/DMTet 提取网格。
+<strong>代表</strong>：</p>
+<ul>
+<li><strong>DeepSDF（SDF 连续表示）</strong>、<strong>Occupancy Networks（占据场）</strong>。([arXiv][7], [CVF开放获取][8])</li>
+<li><strong>DMTet（Deep Marching Tetrahedra）</strong>：把离散 SDF 放在<strong>可变形四面体格</strong>，带<strong>可微</strong>的 Marching Tetrahedra，训练/提取端到端。常被下游文本/图像驱动方法用作网格后端。([arXiv][9], [NeurIPS 会议录][10])
+  <strong>优缺点</strong>：精细、可拓扑变化；需训练/优化，提取网格有阈值与后处理成本。</li>
+</ul>
+<h1 id="3">3) 直接网格生成/变形（显式）</h1>
+<p><strong>思路</strong>：网络直接预测网格的<strong>顶点/面或对模板网格进行变形</strong>。
+<strong>代表</strong>：</p>
+<ul>
+<li><strong>Pixel2Mesh</strong>（单图像 → 网格，逐步形变椭球）([arXiv][11], [CVF开放获取][12])</li>
+<li><strong>AtlasNet</strong>（学习一组可参数化贴片拼成曲面）([CVF开放获取][13])</li>
+<li><strong>Mesh R-CNN</strong>（检测+网格分支，显式三角网格细化）([CVF开放获取][14])</li>
+<li><strong>PolyGen</strong>（Transformer 自回归，直接按<strong>顶点/面序列</strong>生成网格）([Proceedings of Machine Learning Research][15])
+  <strong>优缺点</strong>：输出即是“干净网格”，易于 DCC/游戏引擎；但处理拓扑/自交/全局一致性较难。</li>
+</ul>
+<h1 id="4-2d">4) 文本/图像驱动的<strong>优化式</strong>生成（可微渲染 × 2D 扩散蒸馏）</h1>
+<p><strong>思路</strong>：以可微渲染为桥梁，用<strong>2D 扩散模型</strong>给 3D 表示（NeRF/SDF/DMTet 网格）提供梯度，逐步“雕刻”出几何与材质。
+<strong>代表</strong>：</p>
+<ul>
+<li>**DreamFusion（SDS）**提出<em>Score Distillation Sampling</em>范式。([dreamfusion3d.github.io][16])</li>
+<li>**ProlificDreamer（VSD）**改进 SDS 的质量/多样性，支持高保真网格微调。([NeurIPS 会议录][17])</li>
+<li><strong>Fantasia3D</strong>（几何/外观解耦，常配 DMTet 提取网格并再纹理）([fantasia3d.github.io][18], [ar5iv][19])
+  <strong>优缺点</strong>：开放域强、细节好；<strong>逐样本优化</strong>，耗时，易出现多视不一致/纹理漂移，需正则与后处理。</li>
+</ul>
+<h1 id="5-gan">5) 生成式<strong>前</strong>方法（GAN/扩散/大重建模型，直接产出网格）</h1>
+<p><strong>思路</strong>：端到端前向推理，几秒级得到可用网格/纹理。
+<strong>代表</strong>：</p>
+<ul>
+<li><strong>GET3D</strong>：直接生成<strong>带纹理的显式网格</strong>（自由拓扑，GAN+三平面/可微网格化）。([NeurIPS 会议录][20])</li>
+<li><strong>MeshDiffusion</strong>：把网格参数化到 DMTet 上，做<strong>3D 扩散</strong>直接生成网格。([meshdiffusion.github.io][21])</li>
+<li><strong>InstantMesh / MeshLRM / LRM</strong>：结合多视图扩散+大型重建模型，<strong>单图像十秒级</strong>生成高质量网格。([arXiv][22])
+  <strong>优缺点</strong>：速度快、交互友好；对类别/域外分布较敏感，纹理一致性与超细节依赖训练数据与多视一致性。</li>
+</ul>
+<h1 id="6-sfmmvs">6) 摄影测量（SfM+MVS）/ 新型可微表示 → 网格</h1>
+<p><strong>思路</strong>：多视图图像 → 相机位姿/SfM → MVS 点云 → Poisson/MC 网格；或先用<strong>3D 高斯</strong>等表示，再转网格。
+<strong>代表</strong>：</p>
+<ul>
+<li><strong>COLMAP</strong>（业界常用 SfM+MVS 管线）([demuc.de][23], [COLMAP][24])</li>
+<li><strong>3D Gaussian Splatting（3DGS）</strong>（新型表示，常配 <strong>SuGaR</strong> 做高质量<strong>从高斯到网格</strong>的提取/渲染）([arXiv][25], [CVF开放获取][26])
+  <strong>优缺点</strong>：对实拍场景稳健、尺度大；但移动物体/重复纹理/无纹区域、法向估计会影响网格质量。</li>
+</ul>
+<hr />
+<h2 id="_4">快速选型建议（按你的输入/目标）</h2>
+<ul>
+<li><strong>有点云/深度数据（激光/相机）</strong> → 优先 <strong>Poisson/Screened Poisson</strong>；稀疏/噪声点云可先做法向估计/滤波。([Department of Computer Science][4])</li>
+<li><strong>单/少视图图像 → 可编辑网格</strong> → <strong>InstantMesh/MeshLRM</strong> 等前馈式；需更高保真时再以 <strong>SDS/VSD</strong> 做几分钟级细化。([arXiv][27])</li>
+<li><strong>文本到 3D</strong> → 先选 <strong>DreamFusion/ProlificDreamer/Fantasia3D</strong> 这类优化式，几何用 <strong>DMTet</strong> 提取稳定网格，再做 UV/材质。([dreamfusion3d.github.io][16], [NeurIPS 会议录][17], [arXiv][9])</li>
+<li><strong>实拍多图场景</strong> → <strong>COLMAP</strong>（SfM+MVS）→ <strong>Poisson</strong>；或 <strong>3DGS</strong> → <strong>SuGaR</strong> 网格化以获得更易编辑的资产。([demuc.de][23], [CVF开放获取][26])</li>
+</ul>
+<h2 id="_5">数据与评测基准（常见）</h2>
+<ul>
+<li><strong>数据集</strong>：ShapeNet / ShapeNetPart、Objaverse / Objaverse-XL、Thingi10K（更贴近 3D 打印/真实脏网格）。([arXiv][28], [shapenet.org][29], [NeurIPS 会议录][30])</li>
+<li><strong>常用指标</strong>：Chamfer-L2、F-score/IoU、法向一致性（不同论文实现略有差异，需对齐评测脚本）。</li>
+</ul>
+            </article>
+            
+            <nav class="page-nav"><a href="chapter16.html" class="nav-link prev">← 第16章：多视图重建与新型表示</a></nav>
+        </main>
+    </div>
+</body>
+</html>

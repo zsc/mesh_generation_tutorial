@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="./">
+    <title>第11章：参数化曲面方法</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="assets/highlight.css">
+    <script src="assets/script.js" defer></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']],
+                processEscapes: false,
+                packages: {'[+]': ['noerrors', 'ams']}
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            },
+            loader: {
+                load: ['[tex]/noerrors', '[tex]/ams']
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3>目录</h3>
+                <button id="sidebar-toggle" class="sidebar-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            <div class="sidebar-search">
+                <input type="text" id="sidebar-search-input" placeholder="搜索..." autocomplete="off">
+            </div>
+            <div id="tree-container">
+                <nav class="tree-nav" role="tree">
+                    <div class="tree-item " >
+                        <a href="index.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">3D 网格生成完整教程</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter1.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第1章：3D表示基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter2.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第2章：几何处理基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter3.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第3章：采样理论与重建基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter4.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第4章：Marching Cubes与体素方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter5.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第5章：Poisson表面重建</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter6.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第6章：基于Delaunay的重建方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter7.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第7章：神经隐式表示基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter8.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第8章：DeepSDF与Occupancy Networks</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter9.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第9章：可微分网格提取</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter10.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第10章：基于变形的网格生成</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item active" >
+                        <a href="chapter11.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第11章：参数化曲面方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter12.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第12章：序列生成方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter13.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第13章：3D扩散模型基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter14.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第14章：文本/图像驱动的3D生成</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter15.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第15章：前馈式快速生成</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter16.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第16章：多视图重建与新型表示</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="CLAUDE.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">1) 经典几何重建：点云/体素 → 网格</span>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </nav>
+        
+        <main class="content">
+            <article>
+                <h1 id="11">第11章：参数化曲面方法</h1>
+<h2 id="_1">章节概要</h2>
+<p>参数化曲面方法是显式网格生成的重要分支，通过学习从低维参数空间到3D曲面的映射来生成网格。本章深入探讨AtlasNet及其变体，分析多片拼接策略的数学基础，研究UV映射在神经网络框架下的实现，并讨论曲面连续性的理论保证。这类方法的核心优势在于能够生成拓扑简单、参数化良好的网格，特别适合需要纹理映射的应用场景。</p>
+<h2 id="111-atlasnet">11.1 AtlasNet原理</h2>
+<h3 id="1111">11.1.1 基本思想与动机</h3>
+<p>AtlasNet的核心思想是将3D曲面表示为多个可学习的2D参数化贴片（patch）的集合。每个贴片通过一个神经网络从2D单位正方形映射到3D空间：</p>
+<p>$$\mathcal{S} = \bigcup_{i=1}^{K} f_i([0,1]^2; \theta_i)$$
+其中$f_i: [0,1]^2 \rightarrow \mathbb{R}^3$是第$i$个贴片的参数化函数，$\theta_i$是对应的网络参数。</p>
+<p>这种表示方法的理论基础来自微分几何中的图册（atlas）概念：任何流形都可以用一组局部参数化（图表）覆盖。</p>
+<h3 id="1112">11.1.2 网络架构设计</h3>
+<p>AtlasNet采用条件化的MLP架构，每个贴片网络$f_i$接收三个输入：</p>
+<ol>
+<li>2D参数坐标$(u,v) \in [0,1]^2$</li>
+<li>全局形状编码$z \in \mathbb{R}^d$（来自点云编码器）</li>
+<li>贴片标识符$i$（可选）</li>
+</ol>
+<p>网络输出3D坐标：
+$$f_i(u,v,z) = \text{MLP}_i([u,v,z])$$</p>
+<div class="codehilite"><pre><span></span><code><span class="w">     </span><span class="err">输入点云</span><span class="w">                     </span><span class="err">参数空间</span>
+<span class="w">        </span><span class="o">|</span><span class="w">                           </span><span class="o">|</span>
+<span class="w">        </span><span class="n">v</span><span class="w">                           </span><span class="n">v</span>
+<span class="w">    </span><span class="p">[</span><span class="err">编码器</span><span class="p">]</span><span class="w"> </span><span class="o">----</span><span class="n">z</span><span class="o">----&gt;</span><span class="w">  </span><span class="p">[</span><span class="err">解码器网络集合</span><span class="p">]</span>
+<span class="w">        </span><span class="o">|</span><span class="w">                    </span><span class="o">|</span>
+<span class="w">        </span><span class="n">v</span><span class="w">                    </span><span class="n">v</span>
+<span class="w">    </span><span class="err">形状编码</span><span class="w">            </span><span class="n">K个3D贴片</span><span class="w"> </span><span class="o">---&gt;</span><span class="w"> </span><span class="err">完整曲面</span>
+</code></pre></div>
+
+<h3 id="1113">11.1.3 损失函数设计</h3>
+<p>训练AtlasNet需要精心设计的损失函数来确保生成质量：</p>
+<p><strong>1. Chamfer距离损失</strong>：
+$$\mathcal{L}_{\text{CD}} = \frac{1}{|P|}\sum_{p \in P} \min_{s \in S} |p-s|^2 + \frac{1}{|S|}\sum_{s \in S} \min_{p \in P} |s-p|^2$$
+其中$P$是目标点云，$S$是生成的曲面采样点。</p>
+<p><strong>2. 法向一致性损失</strong>（可选）：
+$$\mathcal{L}_{\text{normal}} = \sum_{i} \int_{[0,1]^2} \left| \frac{\partial f_i}{\partial u} \times \frac{\partial f_i}{\partial v} - n_{\text{target}} \right|^2 dudv$$</p>
+<p><strong>3. 正则化项</strong>：
+- 贴片重叠惩罚：$\mathcal{L}_{\text{overlap}} = \sum_{i \neq j} \text{IoU}(f_i([0,1]^2), f_j([0,1]^2))$
+- 贴片平滑性：$\mathcal{L}_{\text{smooth}} = \sum_i \int |\nabla^2 f_i|^2$</p>
+<h3 id="1114">11.1.4 理论性质分析</h3>
+<p><strong>通用逼近性</strong>：根据Stone-Weierstrass定理，足够多的贴片理论上可以逼近任意紧致曲面。</p>
+<p><strong>拓扑限制</strong>：原始AtlasNet生成的每个贴片拓扑等价于圆盘，总体拓扑结构为：</p>
+<ul>
+<li>亏格$g = 0$（球面拓扑）当贴片完全闭合</li>
+<li>带边界的曲面当贴片不闭合</li>
+</ul>
+<p><strong>参数化质量</strong>：贴片的Jacobian矩阵$J = [\frac{\partial f}{\partial u}, \frac{\partial f}{\partial v}]$决定了参数化质量：</p>
+<ul>
+<li>$\det(J^T J) &gt; 0$：无折叠</li>
+<li>$\sigma_1/\sigma_2 \approx 1$（奇异值比）：低畸变</li>
+</ul>
+<h2 id="112">11.2 多片拼接策略</h2>
+<h3 id="1121">11.2.1 贴片数量选择</h3>
+<p>贴片数量$K$的选择涉及表达能力与计算效率的权衡：</p>
+<p><strong>理论下界</strong>：对于亏格为$g$的闭合曲面，最少需要：
+$$K_{\min} = \begin{cases}
+1, &amp; g = 0 \text{（球面）} \\
+2g, &amp; g &gt; 0 \text{（高亏格）}
+\end{cases}$$
+<strong>实践建议</strong>：</p>
+<ul>
+<li>简单形状（椅子、飞机）：$K = 5-10$</li>
+<li>复杂形状（人体、动物）：$K = 20-50$</li>
+<li>高细节形状：$K = 100+$</li>
+</ul>
+<h3 id="1122">11.2.2 贴片初始化策略</h3>
+<p>良好的初始化对收敛速度和最终质量至关重要：</p>
+<p><strong>1. 均匀球面初始化</strong>：
+将贴片初始化为单位球面的均匀划分：
+$$f_i^{(0)}(u,v) = \text{sphere}_i(u,v)$$</p>
+<p><strong>2. 主成分初始化</strong>：
+基于输入点云的PCA分析初始化贴片方向：
+$$f_i^{(0)} = c + \alpha_1 v_1 u + \alpha_2 v_2 v$$
+其中$v_1, v_2$是主成分方向。</p>
+<p><strong>3. 聚类引导初始化</strong>：
+使用K-means对目标点云聚类，每个簇对应一个贴片：
+$$C_i = \{p \in P : |p - \mu_i| = \min_j |p - \mu_j|\}$$</p>
+<h3 id="1123">11.2.3 贴片边界处理</h3>
+<p>贴片间的缝隙是多片方法的主要挑战：</p>
+<p><strong>1. 软边界策略</strong>：
+在贴片边界引入重叠区域和权重函数：
+$$w_i(u,v) = \exp(-\alpha \cdot d_{\text{boundary}}(u,v))$$
+最终曲面点：
+$$p = \frac{\sum_i w_i(u,v) \cdot f_i(u,v)}{\sum_i w_i(u,v)}$$</p>
+<p><strong>2. 拓扑缝合</strong>：
+显式定义贴片间的邻接关系和缝合规则：</p>
+<div class="codehilite"><pre><span></span><code><span class="err">贴片</span><span class="n">i边界</span><span class="w"> </span><span class="o">&lt;---&gt;</span><span class="w"> </span><span class="err">贴片</span><span class="n">j边界</span>
+<span class="w">   </span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="w">  </span><span class="err">映射到</span><span class="w">  </span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>3. 隐式连续性</strong>：
+通过共享的全局特征$z$隐式学习贴片间的协调：
+$$f_i(1,v,z) \approx f_{i+1}(0,v,z)$$</p>
+<h3 id="1124">11.2.4 自适应贴片分配</h3>
+<p>动态调整贴片分配以适应形状复杂度：</p>
+<p><strong>密度感知分配</strong>：
+根据局部几何复杂度分配贴片密度：
+$$\rho(p) = \kappa_1(p) + \kappa_2(p) + \epsilon$$
+其中$\kappa_1, \kappa_2$是主曲率。</p>
+<p><strong>层次化贴片</strong>：
+构建多分辨率贴片层次：</p>
+<div class="codehilite"><pre><span></span><code>Level 0: 粗糙贴片 (K=4)
+   |
+Level 1: 中等贴片 (K=16)  
+   |
+Level 2: 精细贴片 (K=64)
+</code></pre></div>
+
+<h2 id="113-uv">11.3 UV映射与纹理生成</h2>
+<h3 id="1131-uv">11.3.1 神经UV参数化</h3>
+<p>AtlasNet天然提供了UV参数化，但需要优化以适合纹理映射：</p>
+<p><strong>等距参数化目标</strong>：
+最小化参数域到3D的度量畸变：
+$$E_{\text{iso}} = \int_{[0,1]^2} \left( \left|\frac{\partial f}{\partial u}\right|^2 - \left|\frac{\partial f}{\partial v}\right|^2 \right)^2 + 4\left(\frac{\partial f}{\partial u} \cdot \frac{\partial f}{\partial v}\right)^2 dudv$$
+<strong>共形参数化目标</strong>：
+保持局部角度：
+$$E_{\text{conf}} = \int_{[0,1]^2} \left( \frac{\sigma_{\max}}{\sigma_{\min}} - 1 \right)^2 dudv$$
+其中$\sigma_{\max}, \sigma_{\min}$是Jacobian的奇异值。</p>
+<h3 id="1132">11.3.2 纹理坐标优化</h3>
+<p><strong>1. 贴片内优化</strong>：
+每个贴片内部的UV坐标通过以下约束优化：</p>
+<ul>
+<li>双射性：$\det(J) &gt; 0$</li>
+<li>低畸变：$\text{tr}(J^T J) / 2\sqrt{\det(J^T J)} \approx 1$</li>
+<li>边界对齐：贴片边界对应纹理边界</li>
+</ul>
+<p><strong>2. 贴片间协调</strong>：</p>
+<div class="codehilite"><pre><span></span><code>贴片重叠区域的纹理坐标插值：
+UV_blend = α · UV_patch1 + (1-α) · UV_patch2
+</code></pre></div>
+
+<h3 id="1133">11.3.3 神经纹理合成</h3>
+<p>结合AtlasNet几何与神经纹理生成：</p>
+<p><strong>纹理网络架构</strong>：
+$$T: [0,1]^2 \times \mathbb{R}^d \rightarrow \mathbb{R}^3$$
+输入UV坐标和形状编码，输出RGB值。</p>
+<p><strong>多分辨率纹理</strong>：</p>
+<div class="codehilite"><pre><span></span><code>粗糙纹理 (64×64)
+    |
+中等纹理 (256×256)
+    |  
+精细纹理 (1024×1024)
+</code></pre></div>
+
+<p><strong>纹理损失函数</strong>：
+$$\mathcal{L}_{\text{tex}} = \mathcal{L}_{\text{pixel}} + \lambda_1 \mathcal{L}_{\text{perceptual}} + \lambda_2 \mathcal{L}_{\text{smooth}}$$</p>
+<h3 id="1134">11.3.4 纹理图集生成</h3>
+<p>将多个贴片的纹理打包成单一纹理图集：</p>
+<p><strong>贴片打包算法</strong>：</p>
+<ol>
+<li>计算每个贴片的包围盒</li>
+<li>使用矩形打包算法排列</li>
+<li>生成统一的UV坐标</li>
+</ol>
+<p><strong>Mip-map考虑</strong>：
+确保贴片间有足够间隙避免Mip-map采样时的颜色渗透：
+$$\text{padding} = 2^{\lceil \log_2(\text{texel_size}) \rceil}$$</p>
+<h2 id="114">11.4 曲面连续性分析</h2>
+<h3 id="1141">11.4.1 连续性级别</h3>
+<p>分析AtlasNet生成曲面的几何连续性：</p>
+<p><strong>C⁰连续（位置连续）</strong>：
+贴片边界点重合：
+$$\lim_{u \to 1} f_i(u,v) = \lim_{u \to 0} f_j(u,v)$$
+<strong>C¹连续（切向连续）</strong>：
+贴片边界切向量对齐：
+$$\frac{\partial f_i}{\partial v}\bigg|_{u=1} \parallel \frac{\partial f_j}{\partial v}\bigg|_{u=0}$$
+<strong>C²连续（曲率连续）</strong>：
+贴片边界曲率匹配：
+$$\kappa_i(1,v) = \kappa_j(0,v)$$</p>
+<h3 id="1142">11.4.2 连续性损失设计</h3>
+<p><strong>位置连续性损失</strong>：
+$$\mathcal{L}_{C^0} = \sum_{\text{edges}} \int_0^1 |f_i(1,t) - f_j(0,\phi(t))|^2 dt$$
+<strong>切向连续性损失</strong>：
+$$\mathcal{L}_{C^1} = \sum_{\text{edges}} \int_0^1 \left(1 - \cos\angle\left(\frac{\partial f_i}{\partial v}, \frac{\partial f_j}{\partial v}\right)\right) dt$$
+<strong>曲率连续性损失</strong>：
+$$\mathcal{L}_{C^2} = \sum_{\text{edges}} \int_0^1 |\mathbf{H}_i - \mathbf{H}_j|_F^2 dt$$
+其中$\mathbf{H}$是Hessian矩阵。</p>
+<h3 id="1143">11.4.3 全局拓扑保证</h3>
+<p><strong>欧拉特征数约束</strong>：
+确保生成曲面的拓扑正确性：
+$$\chi = V - E + F = 2 - 2g$$
+<strong>流形性检验</strong>：</p>
+<ul>
+<li>每条边最多被两个面共享</li>
+<li>每个顶点的邻域同胚于圆盘或半圆盘</li>
+</ul>
+<p><strong>亏格控制</strong>：
+通过贴片拓扑和拼接方式控制整体亏格：</p>
+<div class="codehilite"><pre><span></span><code>K个圆盘贴片 + 边界缝合规则 =&gt; 亏格g的曲面
+</code></pre></div>
+
+<h3 id="1144">11.4.4 数值稳定性分析</h3>
+<p><strong>条件数分析</strong>：
+贴片参数化的条件数：
+$$\kappa(J) = |J| \cdot |J^{-1}| = \frac{\sigma_{\max}}{\sigma_{\min}}$$
+良好的参数化应满足$\kappa(J) &lt; 10$。</p>
+<p><strong>采样密度要求</strong>：
+根据局部Lipschitz常数确定采样密度：
+$$\Delta u &lt; \frac{\epsilon}{L}$$
+其中$L = \max_{u,v} |\nabla f(u,v)|$。</p>
+<h2 id="_2">本章小结</h2>
+<p>参数化曲面方法通过学习从2D参数域到3D空间的映射实现网格生成，其核心优势包括：</p>
+<ol>
+<li><strong>理论基础扎实</strong>：基于微分几何的图册理论，有明确的数学框架</li>
+<li><strong>参数化自然</strong>：直接提供UV坐标，便于纹理映射和后续处理</li>
+<li><strong>可控性强</strong>：贴片数量、拓扑结构、连续性级别均可调控</li>
+<li><strong>计算效率高</strong>：前向推理快速，易于并行化</li>
+</ol>
+<p>关键技术要点：</p>
+<ul>
+<li>AtlasNet通过多个MLP学习局部参数化</li>
+<li>贴片拼接需要考虑边界连续性和全局一致性</li>
+<li>UV优化应平衡畸变最小化和双射性保证</li>
+<li>曲面连续性可通过专门的损失函数约束</li>
+</ul>
+<p>主要局限：</p>
+<ul>
+<li>难以处理高亏格拓扑</li>
+<li>贴片边界可能出现裂缝</li>
+<li>参数化质量受网络容量限制</li>
+<li>细节表达能力有上限</li>
+</ul>
+<p>未来发展方向：</p>
+<ul>
+<li>自适应贴片分配</li>
+<li>隐式拓扑学习</li>
+<li>与隐式场方法结合</li>
+<li>可微分贴片拼接</li>
+</ul>
+<h2 id="_3">练习题</h2>
+<h3 id="_4">基础题</h3>
+<p><strong>练习11.1</strong> 证明对于亏格为0的闭合曲面（球面拓扑），理论上单个连续参数化贴片就足够覆盖整个曲面（允许有一个奇点）。</p>
+<p><em>Hint</em>: 考虑立体投影（stereographic projection）。</p>
+<details>
+<summary>参考答案</summary>
+<p>使用立体投影可以将除北极点外的整个球面映射到平面：
+$$f(u,v) = \left(\frac{2u}{u^2+v^2+1}, \frac{2v}{u^2+v^2+1}, \frac{u^2+v^2-1}{u^2+v^2+1}\right)$$
+该映射是连续且可逆的（除北极点$(0,0,1)$外）。对于实际应用，可以使用两个贴片（北半球和南半球）避免奇点，每个贴片覆盖超过半球以确保重叠。</p>
+<p>关键观察：任何与球面同胚的曲面都可以通过类似方式参数化。这解释了为什么AtlasNet对简单拓扑形状效果良好。</p>
+</details>
+<p><strong>练习11.2</strong> 给定AtlasNet的一个贴片函数$f(u,v) = (au, bv, c\sqrt{1-u^2-v^2})$（椭球贴片），计算其Jacobian矩阵并分析参数化质量。</p>
+<p><em>Hint</em>: 计算奇异值并检查条件数。</p>
+<details>
+<summary>参考答案</summary>
+<p>Jacobian矩阵：
+$$J = \begin{bmatrix}
+\frac{\partial f}{\partial u} &amp; \frac{\partial f}{\partial v}
+\end{bmatrix}^T = \begin{bmatrix}
+a &amp; 0 &amp; \frac{-cu}{\sqrt{1-u^2-v^2}} \\
+0 &amp; b &amp; \frac{-cv}{\sqrt{1-u^2-v^2}}
+\end{bmatrix}$$
+度量张量：
+$$G = J^T J = \begin{bmatrix}
+a^2 + \frac{c^2u^2}{1-u^2-v^2} &amp; \frac{c^2uv}{1-u^2-v^2} \\
+\frac{c^2uv}{1-u^2-v^2} &amp; b^2 + \frac{c^2v^2}{1-u^2-v^2}
+\end{bmatrix}$$
+参数化质量指标：</p>
+<ul>
+<li>面积畸变：$\sqrt{\det(G)} = ab\cdot\frac{c}{1-u^2-v^2}$</li>
+<li>在边界$(u^2+v^2 \to 1)$处畸变趋于无穷，说明需要多个贴片覆盖</li>
+<li>条件数在中心较好，边界退化</li>
+</ul>
+</details>
+<p><strong>练习11.3</strong> 设计一个简单的贴片边界匹配算法，使得两个相邻贴片$f_1(1,v)$和$f_2(0,v)$在边界处C⁰连续。</p>
+<p><em>Hint</em>: 考虑边界点的对应关系和插值。</p>
+<details>
+<summary>参考答案</summary>
+<p>算法步骤：</p>
+<ol>
+<li>采样边界点：$p_i = f_1(1, i/N)$, $q_i = f_2(0, i/N)$</li>
+<li>
+<p>计算最优对应：解决匹配问题
+$$\pi^* = \arg\min_\pi \sum_i |p_i - q_{\pi(i)}|^2$$</p>
+</li>
+<li>
+<p>构造对应函数：$\phi(v) = \text{interp}(\pi, v)$</p>
+</li>
+<li>添加边界约束损失：
+$$\mathcal{L}_{\text{match}} = \int_0^1 |f_1(1,v) - f_2(0,\phi(v))|^2 dv$$
+实践中，可以通过共享边界层神经元或添加显式的边界约束层实现。</li>
+</ol>
+</details>
+<h3 id="_5">挑战题</h3>
+<p><strong>练习11.4</strong> 推导使得K个方形贴片拼接成亏格为g的闭合曲面所需的最小边界缝合规则数量。</p>
+<p><em>Hint</em>: 使用欧拉特征数$\chi = V - E + F = 2 - 2g$。</p>
+<details>
+<summary>参考答案</summary>
+<p>对于K个方形贴片：</p>
+<ul>
+<li>初始：每个贴片4条边，共4K条边</li>
+<li>每个缝合操作连接2条边，减少自由边数2</li>
+<li>闭合曲面要求所有边都被缝合</li>
+</ul>
+<p>设需要S个缝合操作：</p>
+<ul>
+<li>缝合后边数：$E = 2K$（每条边被2个面共享）</li>
+<li>顶点数：$V$取决于缝合模式</li>
+<li>面数：$F = K$</li>
+</ul>
+<p>由欧拉公式：$V - 2K + K = 2 - 2g$
+因此：$V = K + 2 - 2g$</p>
+<p>最小缝合数：$S_{\min} = 2K$（每条边恰好缝合一次）</p>
+<p>对于特定亏格g：</p>
+<ul>
+<li>$g=0$: 需要额外约束确保球面拓扑</li>
+<li>$g=1$: 可通过识别对边实现（环面）</li>
+<li>$g&gt;1$: 需要更复杂的缝合模式</li>
+</ul>
+</details>
+<p><strong>练习11.5</strong> 分析AtlasNet在逼近带尖锐特征（如立方体边缘）的形状时的理论局限性，并提出改进方案。</p>
+<p><em>Hint</em>: 考虑MLP的连续性和贴片边界的处理。</p>
+<details>
+<summary>参考答案</summary>
+<p>理论局限：</p>
+<ol>
+<li><strong>MLP连续性</strong>：标准MLP with smooth激活函数产生C^∞曲面，无法表示C⁰不连续（尖锐边缘）</li>
+<li><strong>贴片内部</strong>：单个贴片无法表示折痕，因为参数化函数是光滑的</li>
+<li><strong>贴片边界</strong>：虽然贴片边界可能不连续，但难以精确对齐到目标边缘</li>
+</ol>
+<p>改进方案：</p>
+<ol>
+<li><strong>混合激活函数</strong>：</li>
+</ol>
+<div class="codehilite"><pre><span></span><code>f(u,v) = smooth_part(u,v) + λ·sharp_part(u,v)
+sharp_part使用ReLU等非光滑激活
+</code></pre></div>
+
+<ol start="2">
+<li>
+<p><strong>特征线引导</strong>：
+   - 预先检测尖锐特征线
+   - 将贴片边界对齐到特征线
+   - 在特征线处允许C⁰连续</p>
+</li>
+<li>
+<p><strong>自适应细分</strong>：</p>
+</li>
+</ol>
+<div class="codehilite"><pre><span></span><code>if gradient_magnitude &gt; threshold:
+    subdivide_patch()
+</code></pre></div>
+
+<ol start="4">
+<li><strong>混合表示</strong>：
+   - 光滑区域用AtlasNet
+   - 尖锐特征用显式边缘表示
+   - 组合两种表示</li>
+</ol>
+<p>理论保证：添加的不连续性数量应与目标特征复杂度成正比。</p>
+</details>
+<p><strong>练习11.6</strong> 给定N个3D点的点云，推导AtlasNet需要的最小贴片参数采样密度，使得Chamfer距离小于ε。</p>
+<p><em>Hint</em>: 考虑Lipschitz连续性和覆盖理论。</p>
+<details>
+<summary>参考答案</summary>
+<p>设贴片函数$f_i$的Lipschitz常数为$L$：
+$$|f_i(u_1,v_1) - f_i(u_2,v_2)| \leq L|(u_1-u_2, v_1-v_2)|$$
+对于均匀采样，参数步长$\delta$：</p>
+<ol>
+<li>每个参数点的影响半径：$r = L\delta\sqrt{2}$</li>
+<li>要覆盖所有目标点，需要：$r &lt; \epsilon$</li>
+<li>因此：$\delta &lt; \frac{\epsilon}{L\sqrt{2}}$</li>
+</ol>
+<p>每个贴片的采样点数：
+$$M_{\text{patch}} = \left\lceil\frac{1}{\delta}\right\rceil^2 &gt; \frac{2L^2}{\epsilon^2}$$
+总采样点数（K个贴片）：
+$$M_{\text{total}} = K \cdot M_{\text{patch}} &gt; \frac{2KL^2}{\epsilon^2}$$
+更紧的界（考虑点云分布）：</p>
+<ul>
+<li>如果点云有结构（如位于低维流形），可以降低采样要求</li>
+<li>自适应采样：高曲率区域需要更密集采样
+$$\delta(u,v) = \frac{\epsilon}{\max(L, |\nabla^2 f(u,v)|)}$$
+实践意义：该分析指导了训练时的采样策略和推理时的网格分辨率选择。</li>
+</ul>
+</details>
+<p><strong>练习11.7</strong> 设计一个度量来评估AtlasNet生成的UV参数化质量，考虑等距性、共形性和双射性。</p>
+<p><em>Hint</em>: 结合多个几何度量。</p>
+<details>
+<summary>参考答案</summary>
+<p>综合质量度量：
+$$Q = \alpha Q_{\text{iso}} + \beta Q_{\text{conf}} + \gamma Q_{\text{bij}} + \delta Q_{\text{area}}$$
+各分量定义：</p>
+<ol>
+<li>
+<p><strong>等距性度量</strong>：
+$$Q_{\text{iso}} = \exp\left(-\int_{[0,1]^2} \left||J^TJ| - 2\right| dudv\right)$$</p>
+</li>
+<li>
+<p><strong>共形性度量</strong>：
+$$Q_{\text{conf}} = \exp\left(-\int_{[0,1]^2} \left(\frac{\sigma_1}{\sigma_2} - 1\right)^2 dudv\right)$$</p>
+</li>
+<li>
+<p><strong>双射性度量</strong>：
+$$Q_{\text{bij}} = \frac{\text{Area}(\text{valid})}{\text{Area}(\text{total})}$$
+其中valid区域满足$\det(J) &gt; \epsilon$</p>
+</li>
+<li>
+<p><strong>面积保持度量</strong>：
+$$Q_{\text{area}} = \exp\left(-\left|\log\frac{\int \sqrt{\det(G)} dudv}{\text{Area}_{3D}}\right|\right)$$</p>
+</li>
+</ol>
+<p>权重选择原则：</p>
+<ul>
+<li>纹理映射：重视共形性($\beta$大)</li>
+<li>物理仿真：重视等距性($\alpha$大)</li>
+<li>一般用途：均衡各项($\alpha=\beta=\gamma=\delta=0.25$)</li>
+</ul>
+<p>实际计算时通过蒙特卡洛采样近似积分。</p>
+</details>
+<p><strong>练习11.8</strong> 分析AtlasNet与其他参数化方法（如球面参数化、多立方体映射）的计算复杂度，包括训练和推理阶段。</p>
+<p><em>Hint</em>: 考虑网络大小、贴片数量和采样密度。</p>
+<details>
+<summary>参考答案</summary>
+<p><strong>AtlasNet复杂度</strong>：</p>
+<ul>
+<li>训练：$O(K \cdot D \cdot H \cdot N \cdot E)$</li>
+<li>K: 贴片数</li>
+<li>D: MLP深度</li>
+<li>H: 隐藏层宽度</li>
+<li>N: 批大小</li>
+<li>E: 训练轮数</li>
+<li>推理：$O(K \cdot D \cdot H \cdot M)$</li>
+<li>M: 输出点数</li>
+</ul>
+<p><strong>球面参数化</strong>：</p>
+<ul>
+<li>训练：$O(N \cdot I)$（迭代优化）</li>
+<li>I: 优化迭代次数</li>
+<li>推理：$O(M)$（直接映射）</li>
+</ul>
+<p><strong>多立方体映射</strong>：</p>
+<ul>
+<li>训练：$O(6 \cdot D \cdot H \cdot N \cdot E)$（6个面）</li>
+<li>推理：$O(6 \cdot D \cdot H \cdot M)$</li>
+</ul>
+<p>比较分析：</p>
+<ol>
+<li>AtlasNet灵活性最高，但计算成本随K线性增长</li>
+<li>球面参数化适合固定拓扑，计算效率高</li>
+<li>多立方体在规则形状上效果好，计算量适中</li>
+</ol>
+<p>内存需求：</p>
+<ul>
+<li>AtlasNet: $O(K \cdot D \cdot H)$参数</li>
+<li>球面参数化: $O(V)$顶点存储</li>
+<li>多立方体: $O(6 \cdot D \cdot H)$参数</li>
+</ul>
+<p>实践建议：</p>
+<ul>
+<li>简单形状：球面参数化</li>
+<li>复杂但规则：多立方体</li>
+<li>任意形状：AtlasNet</li>
+</ul>
+</details>
+<h2 id="gotchas">常见陷阱与错误 (Gotchas)</h2>
+<h3 id="1">1. 贴片初始化陷阱</h3>
+<p><strong>问题</strong>：随机初始化导致贴片聚集在一起，无法覆盖整个目标形状。</p>
+<p><strong>症状</strong>：</p>
+<ul>
+<li>训练损失下降缓慢</li>
+<li>生成的曲面有大片空白区域</li>
+<li>贴片重叠严重</li>
+</ul>
+<p><strong>解决方案</strong>：</p>
+<div class="codehilite"><pre><span></span><code><span class="gh">#</span> 错误：随机初始化
+patch_params = torch.randn(K, param_dim)
+
+<span class="gh">#</span> 正确：结构化初始化
+<span class="gh">#</span> 1. 球面均匀分布
+angles = uniform_sphere_sampling(K)
+<span class="gh">#</span> 2. 或基于输入点云聚类
+centers = kmeans(input_points, K)
+</code></pre></div>
+
+<h3 id="2">2. 边界缝隙问题</h3>
+<p><strong>问题</strong>：贴片边界不匹配导致可见裂缝。</p>
+<p><strong>症状</strong>：</p>
+<ul>
+<li>渲染时出现黑线</li>
+<li>网格不是水密的</li>
+<li>法向不连续</li>
+</ul>
+<p><strong>调试技巧</strong>：</p>
+<ol>
+<li>可视化贴片边界点</li>
+<li>计算边界点对距离直方图</li>
+<li>检查边界梯度是否正常回传</li>
+</ol>
+<h3 id="3-uv">3. UV畸变累积</h3>
+<p><strong>问题</strong>：参数化畸变在纹理映射时被放大。</p>
+<p><strong>症状</strong>：</p>
+<ul>
+<li>纹理拉伸或压缩</li>
+<li>棋盘格测试图案变形</li>
+<li>Mip-map出现异常</li>
+</ul>
+<p><strong>诊断方法</strong>：</p>
+<div class="codehilite"><pre><span></span><code><span class="gh">#</span> 计算畸变度量
+distortion = max_singular_value / min_singular_value
+if distortion &gt; 10:
+    print(&quot;Warning: 严重畸变&quot;)
+</code></pre></div>
+
+<h3 id="4">4. 训练不稳定</h3>
+<p><strong>问题</strong>：贴片"翻转"或"塌缩"。</p>
+<p><strong>症状</strong>：</p>
+<ul>
+<li>负Jacobian行列式</li>
+<li>NaN/Inf loss</li>
+<li>贴片退化为线或点</li>
+</ul>
+<p><strong>预防措施</strong>：</p>
+<ol>
+<li>添加正则化项防止退化</li>
+<li>梯度裁剪</li>
+<li>监控Jacobian行列式符号</li>
+</ol>
+<h3 id="5">5. 采样密度不足</h3>
+<p><strong>问题</strong>：参数采样太稀疏，错过细节。</p>
+<p><strong>症状</strong>：</p>
+<ul>
+<li>细节丢失</li>
+<li>锯齿边缘</li>
+<li>Chamfer距离不收敛</li>
+</ul>
+<p><strong>经验公式</strong>：</p>
+<div class="codehilite"><pre><span></span><code>最小采样密度 = 2 * 最高频率分量
+采样点数 ≥ (物体包围盒对角线 / 目标精度)²
+</code></pre></div>
+
+<h3 id="6">6. 拓扑假设错误</h3>
+<p><strong>问题</strong>：假设目标是单一连通组件，但实际有多个部分。</p>
+<p><strong>症状</strong>：</p>
+<ul>
+<li>部件间出现意外连接</li>
+<li>训练震荡</li>
+<li>无法收敛</li>
+</ul>
+<p><strong>解决方法</strong>：</p>
+<ol>
+<li>预处理：连通组件分析</li>
+<li>使用分层AtlasNet</li>
+<li>每个组件独立参数化</li>
+</ol>
+<h3 id="7">7. 梯度消失/爆炸</h3>
+<p><strong>问题</strong>：深层MLP导致梯度问题。</p>
+<p><strong>症状</strong>：</p>
+<ul>
+<li>后期贴片不更新</li>
+<li>训练极慢</li>
+<li>输出范围异常</li>
+</ul>
+<p><strong>缓解策略</strong>：</p>
+<ol>
+<li>使用残差连接</li>
+<li>层归一化</li>
+<li>合适的初始化（Xavier/He）</li>
+</ol>
+<h3 id="8">8. 评估指标误导</h3>
+<p><strong>问题</strong>：Chamfer距离低但视觉质量差。</p>
+<p><strong>症状</strong>：</p>
+<ul>
+<li>点分布不均匀</li>
+<li>存在异常点</li>
+<li>拓扑错误</li>
+</ul>
+<p><strong>更全面的评估</strong>：</p>
+<div class="codehilite"><pre><span></span><code><span class="n">metrics</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="s1">&#39;chamfer&#39;</span><span class="p">:</span><span class="w"> </span><span class="n">chamfer_distance</span><span class="p">(),</span>
+<span class="w">    </span><span class="s1">&#39;normal_consistency&#39;</span><span class="p">:</span><span class="w"> </span><span class="n">normal_angles</span><span class="p">(),</span>
+<span class="w">    </span><span class="s1">&#39;edge_length_std&#39;</span><span class="p">:</span><span class="w"> </span><span class="n">edge_length_variance</span><span class="p">(),</span>
+<span class="w">    </span><span class="s1">&#39;genus&#39;</span><span class="p">:</span><span class="w"> </span><span class="n">compute_genus</span><span class="p">(),</span>
+<span class="w">    </span><span class="s1">&#39;watertight&#39;</span><span class="p">:</span><span class="w"> </span><span class="n">is_watertight</span><span class="p">()</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>记住：参数化方法的成功很大程度上依赖于良好的初始化、合适的贴片数量选择和精心设计的损失函数。调试时应该同时关注几何和拓扑两个方面。</p>
+            </article>
+            
+            <nav class="page-nav"><a href="chapter10.html" class="nav-link prev">← 第10章：基于变形的网格生成</a><a href="chapter12.html" class="nav-link next">第12章：序列生成方法 →</a></nav>
+        </main>
+    </div>
+</body>
+</html>

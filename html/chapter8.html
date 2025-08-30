@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="./">
+    <title>第8章：DeepSDF与Occupancy Networks</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="assets/highlight.css">
+    <script src="assets/script.js" defer></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']],
+                processEscapes: false,
+                packages: {'[+]': ['noerrors', 'ams']}
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            },
+            loader: {
+                load: ['[tex]/noerrors', '[tex]/ams']
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3>目录</h3>
+                <button id="sidebar-toggle" class="sidebar-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            <div class="sidebar-search">
+                <input type="text" id="sidebar-search-input" placeholder="搜索..." autocomplete="off">
+            </div>
+            <div id="tree-container">
+                <nav class="tree-nav" role="tree">
+                    <div class="tree-item " >
+                        <a href="index.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">3D 网格生成完整教程</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter1.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第1章：3D表示基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter2.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第2章：几何处理基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter3.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第3章：采样理论与重建基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter4.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第4章：Marching Cubes与体素方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter5.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第5章：Poisson表面重建</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter6.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第6章：基于Delaunay的重建方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter7.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第7章：神经隐式表示基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item active" >
+                        <a href="chapter8.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第8章：DeepSDF与Occupancy Networks</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter9.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第9章：可微分网格提取</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter10.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第10章：基于变形的网格生成</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter11.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第11章：参数化曲面方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter12.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第12章：序列生成方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter13.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第13章：3D扩散模型基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter14.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第14章：文本/图像驱动的3D生成</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter15.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第15章：前馈式快速生成</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter16.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第16章：多视图重建与新型表示</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="CLAUDE.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">1) 经典几何重建：点云/体素 → 网格</span>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </nav>
+        
+        <main class="content">
+            <article>
+                <h1 id="8deepsdfoccupancy-networks">第8章：DeepSDF与Occupancy Networks</h1>
+<h2 id="_1">本章导读</h2>
+<p>神经隐式表示的出现为3D形状学习开辟了全新的范式。不同于传统的离散表示（如体素或点云），DeepSDF和Occupancy Networks通过连续函数逼近实现了高精度、低存储的3D形状表示。本章深入探讨这两种开创性方法的理论基础、架构设计、优化技术以及实践中的关键技巧，帮助读者掌握学习式隐式场方法的核心思想。</p>
+<p><strong>学习目标</strong>：</p>
+<ul>
+<li>理解自编码器在3D形状学习中的应用原理</li>
+<li>掌握隐空间优化的数学基础与实现策略</li>
+<li>学会设计条件化神经隐式表示</li>
+<li>熟悉训练神经隐式场的关键技巧与损失函数设计</li>
+</ul>
+<h2 id="81">8.1 神经隐式表示的理论基础</h2>
+<h3 id="811">8.1.1 从离散到连续：表示的演化</h3>
+<p>传统3D表示方法面临精度-存储的权衡困境。体素表示的分辨率受限于 $O(n^3)$ 的存储复杂度，点云缺乏拓扑信息，网格难以处理拓扑变化。神经隐式表示通过学习连续函数 $f: \mathbb{R}^3 \rightarrow \mathbb{R}$ 突破了这一限制。</p>
+<p><strong>离散表示的局限性分析</strong>：</p>
+<ol>
+<li>
+<p><strong>体素网格</strong>：对于分辨率为 $n \times n \times n$ 的体素网格，存储复杂度为 $O(n^3)$。要达到毫米级精度，一个边长1米的物体需要 $1000^3 = 10^9$ 个体素，即使使用稀疏表示也难以处理。</p>
+</li>
+<li>
+<p><strong>点云表示</strong>：虽然存储效率高（$O(N)$，$N$ 为点数），但缺乏表面连续性和拓扑信息。重建表面需要额外的后处理步骤，如泊松重建或球旋转算法。</p>
+</li>
+<li>
+<p><strong>三角网格</strong>：提供了明确的表面定义，但难以处理拓扑变化（如合并、分裂），且对于高曲率区域需要大量三角形才能准确表示。</p>
+</li>
+</ol>
+<p><strong>连续函数表示的优势</strong>：</p>
+<p>神经隐式表示将3D形状编码为连续标量场，具有以下关键优势：</p>
+<ul>
+<li><strong>无限分辨率</strong>：理论上可以在任意精度下查询函数值</li>
+<li><strong>紧凑存储</strong>：整个形状由网络参数表示，与分辨率无关</li>
+<li><strong>拓扑灵活性</strong>：自然处理任意亏格的形状</li>
+<li><strong>可微性质</strong>：便于基于梯度的优化和学习</li>
+</ul>
+<p>对于DeepSDF，函数 $f$ 表示符号距离场（SDF）：
+$$f(\mathbf{x}) = \text{SDF}(\mathbf{x}) = \begin{cases}
+d(\mathbf{x}, \partial\Omega) &amp; \mathbf{x} \in \Omega \\
+-d(\mathbf{x}, \partial\Omega) &amp; \mathbf{x} \notin \Omega
+\end{cases}$$
+其中 $\Omega$ 表示形状内部，$\partial\Omega$ 为形状边界，$d(\cdot, \cdot)$ 为欧氏距离。</p>
+<p>对于Occupancy Networks，函数 $f$ 表示占据概率：
+$$f(\mathbf{x}) = P(\mathbf{x} \in \Omega) \in [0, 1]$$
+<strong>SDF vs Occupancy的理论对比</strong>：</p>
+<p>| 特性 | SDF | Occupancy |</p>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>SDF</th>
+<th>Occupancy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>值域</td>
+<td>$\mathbb{R}$</td>
+<td>$[0, 1]$</td>
+</tr>
+<tr>
+<td>表面定义</td>
+<td>$\{x: f(x) = 0\}$</td>
+<td>$\{x: f(x) = 0.5\}$</td>
+</tr>
+<tr>
+<td>梯度信息</td>
+<td>提供距离和方向</td>
+<td>仅提供方向</td>
+</tr>
+<tr>
+<td>训练稳定性</td>
+<td>需要Eikonal约束</td>
+<td>自然有界</td>
+</tr>
+<tr>
+<td>表面法向</td>
+<td>直接计算 $\nabla f$</td>
+<td>需要数值差分</td>
+</tr>
+</tbody>
+</table>
+<h3 id="812">8.1.2 通用逼近定理的应用</h3>
+<p>根据通用逼近定理（Universal Approximation Theorem），具有足够容量的神经网络可以以任意精度逼近连续函数。对于紧集 $K \subset \mathbb{R}^3$ 上的连续函数 $f: K \rightarrow \mathbb{R}$，存在一个前馈神经网络 $\hat{f}$ 使得：
+$$\sup_{\mathbf{x} \in K} |f(\mathbf{x}) - \hat{f}(\mathbf{x})| &lt; \epsilon$$
+<strong>Cybenko定理的3D扩展</strong>：</p>
+<p>对于具有单隐层的神经网络：
+$$\hat{f}(\mathbf{x}) = \sum_{i=1}^N \alpha_i \sigma(\mathbf{w}_i^T \mathbf{x} + b_i)$$
+其中 $\sigma$ 是非多项式激活函数，Cybenko证明了当 $N \to \infty$ 时，这样的网络可以逼近任意连续函数。</p>
+<p><strong>深度网络的表示优势</strong>：</p>
+<p>虽然单层网络具有通用逼近能力，但深度网络在实践中更有效：</p>
+<ol>
+<li>
+<p><strong>指数表达能力</strong>：深度为 $L$ 的网络可以表示需要宽度 $O(2^L)$ 的浅层网络才能表示的函数</p>
+</li>
+<li>
+<p><strong>组合性</strong>：深层结构自然编码了形状的层次化特征：
+   - 浅层：局部几何特征（边、角）
+   - 中层：部件级特征（面、曲线段）
+   - 深层：全局形状特征</p>
+</li>
+<li>
+<p><strong>频率分解</strong>：根据神经正切核（NTK）理论，网络深度影响可学习的频率范围：
+$$K_{NTK}(\mathbf{x}, \mathbf{x}') = \lim_{width \to \infty} \langle \nabla_\theta f(\mathbf{x}), \nabla_\theta f(\mathbf{x}') \rangle$$
+这为使用神经网络表示复杂3D形状提供了理论保证。</p>
+</li>
+</ol>
+<h3 id="813">8.1.3 隐式表面的数学性质</h3>
+<p>SDF具有重要的数学性质，这些性质不仅定义了其几何意义，还指导了网络训练：</p>
+<p><strong>1. Eikonal方程</strong>：
+$$|\nabla f(\mathbf{x})| = 1 \text{ a.e. in } \mathbb{R}^3 \setminus \partial\Omega$$
+这个性质源于SDF的最短路径定义。证明：考虑点 $\mathbf{x}$ 沿单位向量 $\mathbf{v}$ 移动微小距离 $\epsilon$：
+$$f(\mathbf{x} + \epsilon\mathbf{v}) = f(\mathbf{x}) + \epsilon \langle \nabla f(\mathbf{x}), \mathbf{v} \rangle + O(\epsilon^2)$$
+当 $\mathbf{v}$ 指向最近边界点时，$|f(\mathbf{x} + \epsilon\mathbf{v}) - f(\mathbf{x})| = \epsilon$，因此 $|\nabla f| = 1$。</p>
+<p><strong>2. 距离度量性质（1-Lipschitz连续性）</strong>：
+$$|f(\mathbf{x}_1) - f(\mathbf{x}_2)| \leq |\mathbf{x}_1 - \mathbf{x}_2|_2$$
+这保证了SDF的平滑性和稳定性。从积分形式看：
+$$f(\mathbf{x}_2) - f(\mathbf{x}_1) = \int_0^1 \langle \nabla f(\mathbf{x}_1 + t(\mathbf{x}_2 - \mathbf{x}_1)), \mathbf{x}_2 - \mathbf{x}_1 \rangle dt$$
+由于 $|\nabla f| = 1$，通过Cauchy-Schwarz不等式得到1-Lipschitz性质。</p>
+<p><strong>3. 法向计算与曲率信息</strong>：</p>
+<p>表面法向直接由梯度给出：
+$$\mathbf{n}(\mathbf{x}) = \nabla f(\mathbf{x}) / |\nabla f(\mathbf{x})|$$
+平均曲率可由SDF的拉普拉斯算子计算：
+$$H = -\frac{1}{2}\Delta f|_{\partial\Omega}$$
+主曲率 $\kappa_1, \kappa_2$ 是Hessian矩阵 $\nabla^2 f$ 在切平面上的特征值。</p>
+<p><strong>4. 水平集演化</strong>：</p>
+<p>SDF的水平集 $\mathcal{L}_c = \{x: f(x) = c\}$ 满足演化方程：
+$$\frac{\partial f}{\partial t} + F|\nabla f| = 0$$</p>
+<p>其中 $F$ 是速度函数。这在形状变形和动画中非常有用。</p>
+<p><strong>5. 体积和表面积计算</strong>：</p>
+<p>利用Heaviside函数 $H(x)$ 和Dirac delta函数 $\delta(x)$：</p>
+<p>体积：$$V = \int_{\mathbb{R}^3} H(-f(\mathbf{x})) d\mathbf{x}$$</p>
+<p>表面积：$$A = \int_{\mathbb{R}^3} \delta(f(\mathbf{x}))|\nabla f(\mathbf{x})| d\mathbf{x}$$
+这些性质在网络设计和损失函数构造中起关键作用。</p>
+<h2 id="82">8.2 自编码器架构设计</h2>
+<h3 id="821-deepsdf">8.2.1 DeepSDF的架构哲学</h3>
+<p>DeepSDF采用自编码器框架，但与传统自编码器有本质区别。传统自编码器通过编码器-解码器对学习数据的压缩表示，而DeepSDF省略了显式编码器，直接学习从隐码和空间坐标到SDF值的映射。</p>
+<p><strong>架构对比</strong>：</p>
+<p>传统自编码器：</p>
+<div class="codehilite"><pre><span></span><code>输入数据 X → 编码器 E(X) → 隐码 z → 解码器 D(z) → 重建 X&#39;
+</code></pre></div>
+
+<p>DeepSDF架构：</p>
+<div class="codehilite"><pre><span></span><code>输入空间点 x ∈ R³ → [编码器省略] → 隐码 z ∈ R^d → 解码器 f(x,z) → SDF值
+</code></pre></div>
+
+<p>关键创新在于：</p>
+<ul>
+<li><strong>无显式编码器</strong>：通过优化获得隐码，避免了编码器的训练开销</li>
+<li><strong>条件解码器</strong>：$f_\theta(\mathbf{x}, \mathbf{z}): \mathbb{R}^3 \times \mathbb{R}^d \rightarrow \mathbb{R}$</li>
+<li><strong>形状感知采样</strong>：在表面附近密集采样，提高训练效率</li>
+</ul>
+<p><strong>数学形式化</strong>：</p>
+<p>DeepSDF的解码器可表示为：
+$$f_\theta(\mathbf{x}, \mathbf{z}) = \text{MLP}_\theta([\mathbf{x}; \mathbf{z}])$$
+其中 $[\cdot; \cdot]$ 表示向量拼接。具体展开为：
+$$\begin{aligned}
+\mathbf{h}_0 &amp;= [\mathbf{x}; \mathbf{z}] \in \mathbb{R}^{3+d} \\
+\mathbf{h}_{l+1} &amp;= \phi(W_l \mathbf{h}_l + \mathbf{b}_l), \quad l = 0, ..., L-2 \\
+f(\mathbf{x}, \mathbf{z}) &amp;= W_{L-1} \mathbf{h}_{L-1} + b_{L-1} \in \mathbb{R}
+\end{aligned}$$
+<strong>Skip Connection的引入</strong>：</p>
+<p>为了缓解梯度消失并保留空间信息，在第4层引入skip connection：
+$$\mathbf{h}_4 = \phi(W_3 \mathbf{h}_3 + \mathbf{b}_3) \oplus [\mathbf{x}; \mathbf{z}]$$
+这种设计让网络在深层仍能直接访问原始坐标信息，对于保持几何精度至关重要。</p>
+<h3 id="822">8.2.2 网络深度与宽度的权衡</h3>
+<p>网络容量的选择直接影响表示能力和泛化性能。通过系统的消融实验，研究者发现了最优的架构配置。</p>
+<p><strong>深度影响的理论分析</strong>：</p>
+<p>根据函数逼近理论，深度 $L$ 层的网络可以高效表示的函数复杂度为：
+$$\mathcal{C}(L) \sim O(2^L)$$
+对于3D形状，需要捕捉多尺度特征：</p>
+<ul>
+<li>第1-2层：低频全局形状</li>
+<li>第3-5层：中频局部结构</li>
+<li>第6-8层：高频几何细节</li>
+</ul>
+<p><strong>宽度影响的实验观察</strong>：</p>
+<p>| 隐层宽度 | 参数量 | Chamfer-L2 | 训练时间 | 过拟合风险 |</p>
+<table>
+<thead>
+<tr>
+<th>隐层宽度</th>
+<th>参数量</th>
+<th>Chamfer-L2</th>
+<th>训练时间</th>
+<th>过拟合风险</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>128</td>
+<td>~100K</td>
+<td>0.0082</td>
+<td>1x</td>
+<td>低</td>
+</tr>
+<tr>
+<td>256</td>
+<td>~400K</td>
+<td>0.0054</td>
+<td>2x</td>
+<td>中</td>
+</tr>
+<tr>
+<td>512</td>
+<td>~1.6M</td>
+<td>0.0041</td>
+<td>4x</td>
+<td>高</td>
+</tr>
+<tr>
+<td>1024</td>
+<td>~6.4M</td>
+<td>0.0039</td>
+<td>8x</td>
+<td>很高</td>
+</tr>
+</tbody>
+</table>
+<p>实验表明：</p>
+<ul>
+<li><strong>深度影响</strong>：8层网络达到最佳平衡，更深导致训练困难</li>
+<li><strong>宽度影响</strong>：512维提供足够容量，更宽边际收益递减</li>
+<li><strong>最优配置</strong>：8层 × 512维的全连接网络，约1.6M参数</li>
+</ul>
+<p><strong>激活函数的选择</strong>：</p>
+<p>不同激活函数对隐式场学习的影响：</p>
+<ol>
+<li>
+<p><strong>ReLU</strong>：
+   - 优点：计算高效，稀疏激活
+   - 缺点：一阶导数不连续，产生"折痕"
+   - 适用：快速原型，低精度应用</p>
+</li>
+<li>
+<p><strong>Tanh/Softplus</strong>：
+   - 优点：光滑可导，表面质量高
+   - 缺点：饱和问题，训练慢
+   - 适用：高质量重建</p>
+</li>
+<li>
+<p><strong>周期激活（SIREN）</strong>：
+$$\phi(x) = \sin(\omega_0 x)$$</p>
+</li>
+</ol>
+<ul>
+<li>优点：无限阶可导，捕捉高频细节</li>
+<li>缺点：初始化敏感，训练不稳定</li>
+<li>适用：精细纹理，复杂几何</li>
+</ul>
+<p><strong>网络初始化策略</strong>：</p>
+<p>正确的初始化对训练至关重要：</p>
+<ol>
+<li>
+<p><strong>几何感知初始化</strong>：
+   最后一层偏置初始化为球体SDF的均值：
+$$b_{L-1} = -\mathbb{E}[|\mathbf{x}|], \quad \mathbf{x} \sim \text{Uniform}([-1,1]^3)$$</p>
+</li>
+<li>
+<p><strong>SIREN初始化</strong>：
+$$W_l \sim \text{Uniform}\left(-\sqrt{\frac{6}{n_{in}}}, \sqrt{\frac{6}{n_{in}}}\right)$$
+首层：$\omega_0 W_0$，其中 $\omega_0 = 30$</p>
+</li>
+</ol>
+<h3 id="823-occupancy-networks">8.2.3 Occupancy Networks的设计差异</h3>
+<p>Occupancy Networks采用不同的设计理念，强调概率建模和层次化特征：
+$$f_\theta(\mathbf{x}, \mathbf{z}) = \sigma(g_\theta(\psi(\mathbf{x}), \mathbf{z}))$$
+<strong>位置编码 $\psi$ 的设计</strong>：</p>
+<ol>
+<li>
+<p><strong>傅里叶特征映射</strong>：
+$$\psi(\mathbf{x}) = [\sin(2\pi B\mathbf{x}), \cos(2\pi B\mathbf{x})]$$
+其中 $B \in \mathbb{R}^{m \times 3}$ 是随机采样的频率矩阵</p>
+</li>
+<li>
+<p><strong>多尺度位置编码</strong>：
+$$\psi(\mathbf{x}) = [\mathbf{x}, \sin(2^0\pi\mathbf{x}), \cos(2^0\pi\mathbf{x}), ..., \sin(2^L\pi\mathbf{x}), \cos(2^L\pi\mathbf{x})]$$
+<strong>条件批归一化（CBN）</strong>：</p>
+</li>
+</ol>
+<p>CBN允许形状信息调制网络的中间特征：
+$$\text{CBN}(\mathbf{h}, \mathbf{z}) = \gamma(\mathbf{z}) \odot \frac{\mathbf{h} - \mu(\mathbf{h})}{\sigma(\mathbf{h})} + \beta(\mathbf{z})$$
+其中 $\gamma(\mathbf{z}), \beta(\mathbf{z})$ 是依赖于隐码的仿射参数。</p>
+<p><strong>ResNet块的应用</strong>：</p>
+<p>为了训练更深的网络，引入残差连接：
+$$\mathbf{h}_{l+2} = \mathbf{h}_l + \mathcal{F}(\mathbf{h}_l, \{W_i\})$$
+其中 $\mathcal{F}$ 是两层卷积块：
+$$\mathcal{F}(\mathbf{h}) = W_2 \cdot \text{ReLU}(\text{BN}(W_1 \cdot \mathbf{h}))$$
+<strong>多尺度特征聚合</strong>：</p>
+<p>Occupancy Networks使用特征金字塔捕捉多尺度信息：</p>
+<div class="codehilite"><pre><span></span><code>       ┌─────────┐
+       │ Global  │ z_global
+       └────┬────┘
+            │
+      ┌─────┴─────┐
+      │           │
+   ┌──▼──┐    ┌──▼──┐
+   │Local│    │Local│ z_local
+   └──┬──┘    └──┬──┘
+      │          │
+   ┌──▼──┐    ┌──▼──┐
+   │Fine │    │Fine │ z_fine
+   └─────┘    └─────┘
+</code></pre></div>
+
+<p>最终预测：
+$$f(\mathbf{x}) = \text{MLP}([z_{global}; z_{local}(\mathbf{x}); z_{fine}(\mathbf{x})])$$</p>
+<h2 id="83">8.3 隐空间优化技术</h2>
+<h3 id="831-test-time-optimization">8.3.1 测试时优化（Test-Time Optimization）</h3>
+<p>DeepSDF的核心创新是测试时隐码优化。给定观测点集 $\{(\mathbf{x}_i, s_i)\}$，通过最小化重建误差获得隐码：
+$$\mathbf{z}^* = \arg\min_{\mathbf{z}} \sum_{i=1}^N L(f_\theta(\mathbf{x}_i, \mathbf{z}), s_i) + \lambda |\mathbf{z}|_2^2$$
+优化过程：</p>
+<ol>
+<li>初始化：$\mathbf{z}_0 \sim \mathcal{N}(0, \sigma^2 I)$</li>
+<li>梯度下降：$\mathbf{z}_{t+1} = \mathbf{z}_t - \alpha \nabla_{\mathbf{z}} L$</li>
+<li>收敛准则：$|\nabla_{\mathbf{z}} L| &lt; \epsilon$ 或达到最大迭代次数</li>
+</ol>
+<h3 id="832">8.3.2 隐空间的结构化</h3>
+<p>为了获得有意义的隐空间，需要施加结构约束：</p>
+<p><strong>VAE正则化</strong>：
+$$L_{VAE} = \mathbb{E}_{q(\mathbf{z}|\mathbf{x})}[\log p(\mathbf{x}|\mathbf{z})] - \beta \cdot KL(q(\mathbf{z}|\mathbf{x})||p(\mathbf{z}))$$
+<strong>对比学习</strong>：
+$$L_{contrastive} = -\log \frac{\exp(\text{sim}(\mathbf{z}_i, \mathbf{z}_i^+)/\tau)}{\sum_j \exp(\text{sim}(\mathbf{z}_i, \mathbf{z}_j)/\tau)}$$</p>
+<h3 id="833">8.3.3 多模态融合优化</h3>
+<p>当有多种输入模态（如图像、点云）时：
+$$\mathbf{z}^* = \arg\min_{\mathbf{z}} L_{3D}(\mathbf{z}) + \alpha L_{2D}(\mathbf{z}) + \beta L_{prior}(\mathbf{z})$$
+其中：</p>
+<ul>
+<li>$L_{3D}$：3D重建损失</li>
+<li>$L_{2D}$：2D投影一致性损失</li>
+<li>$L_{prior}$：先验分布约束</li>
+</ul>
+<h2 id="84">8.4 条件化策略</h2>
+<h3 id="841-vs">8.4.1 全局条件化 vs. 局部条件化</h3>
+<p><strong>全局条件化</strong>（DeepSDF采用）：
+$$f(\mathbf{x}, \mathbf{z}) = \text{MLP}([\mathbf{x}; \mathbf{z}])$$
+优点：简单高效，全局一致性好
+缺点：难以捕捉局部细节</p>
+<p><strong>局部条件化</strong>（如Convolutional Occupancy Networks）：
+$$f(\mathbf{x}, \mathbf{z}) = \sum_{i} w_i(\mathbf{x}) \cdot f_i(\mathbf{x}, \mathbf{z}_i)$$
+其中 $w_i$ 是空间权重函数，$\mathbf{z}_i$ 是局部特征。</p>
+<h3 id="842">8.4.2 层次化条件注入</h3>
+<p>FiLM（Feature-wise Linear Modulation）条件化：
+$$h_{l+1} = \phi((\gamma_l(\mathbf{z}) \odot h_l + \beta_l(\mathbf{z})) \cdot W_l)$$
+其中 $\gamma_l, \beta_l$ 是依赖于隐码的仿射变换。</p>
+<h3 id="843">8.4.3 注意力机制的应用</h3>
+<p>交叉注意力条件化：
+$$\text{Attention}(\mathbf{x}, \mathbf{z}) = \text{softmax}\left(\frac{Q(\mathbf{x})K(\mathbf{z})^T}{\sqrt{d_k}}\right)V(\mathbf{z})$$
+这允许网络动态选择相关的形状特征。</p>
+<h2 id="85">8.5 训练技巧与损失函数设计</h2>
+<h3 id="851">8.5.1 采样策略</h3>
+<p>有效的采样对训练至关重要：</p>
+<p><strong>表面采样</strong>：</p>
+<ul>
+<li>均匀采样：在表面均匀分布</li>
+<li>曲率加权：高曲率区域密集采样</li>
+<li>误差导向：在高误差区域增加采样</li>
+</ul>
+<p><strong>空间采样</strong>：</p>
+<div class="codehilite"><pre><span></span><code>近表面区域 (|SDF| &lt; δ): 70% 样本
+中等距离 (δ &lt; |SDF| &lt; 2δ): 20% 样本  
+远距离 (|SDF| &gt; 2δ): 10% 样本
+</code></pre></div>
+
+<h3 id="852">8.5.2 损失函数设计</h3>
+<p><strong>基础重建损失</strong>：
+$$L_{rec} = \frac{1}{N}\sum_{i=1}^N |f_\theta(\mathbf{x}_i, \mathbf{z}) - s_i^{gt}|$$
+<strong>Eikonal正则化</strong>（for SDF）：
+$$L_{eikonal} = \frac{1}{M}\sum_{j=1}^M (|\nabla_{\mathbf{x}} f_\theta(\mathbf{x}_j, \mathbf{z})| - 1)^2$$
+<strong>符号一致性损失</strong>：
+$$L_{sign} = \frac{1}{K}\sum_{k=1}^K \max(0, -\text{sign}(s_k^{gt}) \cdot f_\theta(\mathbf{x}_k, \mathbf{z}))$$
+<strong>总损失</strong>：
+$$L_{total} = L_{rec} + \lambda_1 L_{eikonal} + \lambda_2 L_{sign} + \lambda_3 |\mathbf{z}|_2^2$$</p>
+<h3 id="853">8.5.3 训练策略</h3>
+<p><strong>课程学习</strong>：</p>
+<ol>
+<li>初期：简单形状，低分辨率</li>
+<li>中期：增加复杂度，提高分辨率</li>
+<li>后期：精细调整，困难样本</li>
+</ol>
+<p><strong>动态权重调整</strong>：
+$$\lambda_i^{(t)} = \lambda_i^{(0)} \cdot \exp(-\alpha t) + \lambda_i^{(\infty)}$$
+<strong>梯度裁剪与归一化</strong>：</p>
+<ul>
+<li>梯度裁剪：$|\nabla_\theta| \leq c$</li>
+<li>梯度归一化：$\nabla_\theta / |\nabla_\theta|$</li>
+</ul>
+<h2 id="86">8.6 网格提取与后处理</h2>
+<h3 id="861">8.6.1 从隐式场到显式网格</h3>
+<p><strong>Marching Cubes提取</strong>：</p>
+<ol>
+<li>空间离散化：构建规则网格</li>
+<li>SDF评估：$s_{i,j,k} = f_\theta(\mathbf{x}_{i,j,k}, \mathbf{z}^*)$</li>
+<li>等值面提取：$\{x: f(x) = 0\}$</li>
+<li>顶点位置精化：线性插值或牛顿法</li>
+</ol>
+<p><strong>分辨率自适应</strong>：</p>
+<ul>
+<li>八叉树细分：在高曲率区域增加分辨率</li>
+<li>误差导向：根据逼近误差动态调整</li>
+</ul>
+<h3 id="862">8.6.2 网格质量优化</h3>
+<p>提取后的网格通常需要后处理：</p>
+<ol>
+<li><strong>法向一致性</strong>：确保法向朝外</li>
+<li><strong>拓扑清理</strong>：移除孤立组件</li>
+<li><strong>网格简化</strong>：基于二次误差度量（QEM）</li>
+<li><strong>平滑处理</strong>：拉普拉斯平滑或双边滤波</li>
+</ol>
+<h2 id="_2">本章小结</h2>
+<p>本章系统介绍了DeepSDF和Occupancy Networks两种开创性的神经隐式表示方法。核心要点包括：</p>
+<ol>
+<li><strong>理论基础</strong>：神经网络的通用逼近能力为连续3D形状表示提供了理论保证</li>
+<li><strong>架构设计</strong>：条件解码器结构实现了形状的紧凑表示</li>
+<li><strong>隐空间优化</strong>：测试时优化技术是DeepSDF的核心创新</li>
+<li><strong>条件化策略</strong>：多种条件注入方式适应不同应用需求</li>
+<li><strong>训练技巧</strong>：采样策略和损失函数设计决定了表示质量</li>
+</ol>
+<p>关键公式回顾：</p>
+<ul>
+<li>SDF定义：$f(\mathbf{x}) = \pm d(\mathbf{x}, \partial\Omega)$</li>
+<li>Eikonal约束：$|\nabla f(\mathbf{x})| = 1$</li>
+<li>隐码优化：$\mathbf{z}^* = \arg\min_{\mathbf{z}} L(f_\theta(\mathbf{x}, \mathbf{z}), s^{gt})$</li>
+<li>综合损失：$L = L_{rec} + \lambda_1 L_{eikonal} + \lambda_2 L_{reg}$</li>
+</ul>
+<p>这些方法为后续的3D生成技术奠定了基础，如DMTet的可微网格化、扩散模型的3D生成等都建立在神经隐式表示之上。</p>
+<h2 id="_3">练习题</h2>
+<h3 id="_4">基础题</h3>
+<p><strong>练习8.1</strong> 证明SDF的Eikonal性质
+给定符号距离场 $f(\mathbf{x})$，证明在非边界点处有 $|\nabla f(\mathbf{x})| = 1$。</p>
+<p><em>Hint</em>: 考虑SDF的定义和最短路径的性质。</p>
+<details>
+<summary>参考答案</summary>
+<p>对于点 $\mathbf{x}$ 不在边界上，设其到边界的最近点为 $\mathbf{p}^*$。考虑从 $\mathbf{x}$ 出发沿任意方向 $\mathbf{v}$（$|\mathbf{v}|=1$）移动小距离 $\epsilon$：
+$$f(\mathbf{x} + \epsilon\mathbf{v}) - f(\mathbf{x}) = d(\mathbf{x} + \epsilon\mathbf{v}, \partial\Omega) - d(\mathbf{x}, \partial\Omega)$$
+根据三角不等式：
+$$|d(\mathbf{x} + \epsilon\mathbf{v}, \partial\Omega) - d(\mathbf{x}, \partial\Omega)| \leq \epsilon$$
+当 $\mathbf{v}$ 指向或背离最近点 $\mathbf{p}^*$ 时，等号成立：
+$$\lim_{\epsilon \to 0} \frac{f(\mathbf{x} + \epsilon\mathbf{v}) - f(\mathbf{x})}{\epsilon} = \pm 1$$
+因此 $|\nabla f(\mathbf{x})| = 1$。</p>
+</details>
+<p><strong>练习8.2</strong> 隐码维度选择
+设计实验比较不同隐码维度（8, 32, 128, 256）对形状重建质量的影响。分析维度与表示能力、泛化性能的关系。</p>
+<p><em>Hint</em>: 考虑信息瓶颈理论和过拟合风险。</p>
+<details>
+<summary>参考答案</summary>
+<p>实验设计：</p>
+<ol>
+<li>数据集：使用ShapeNet椅子类别，1000个训练样本</li>
+<li>评价指标：Chamfer距离、IoU、隐空间插值质量</li>
+<li>控制变量：网络架构、训练策略保持一致</li>
+</ol>
+<p>预期结果：</p>
+<ul>
+<li>d=8：欠拟合，细节丢失，但泛化好，插值平滑</li>
+<li>d=32：平衡点，重建质量和泛化性能均衡</li>
+<li>d=128：细节丰富，但开始出现过拟合</li>
+<li>d=256：训练集完美重建，测试集性能下降，插值出现artifacts</li>
+</ul>
+<p>理论分析：
+隐码维度决定了信息瓶颈的大小。过小导致信息损失，过大则失去正则化效果。最优维度取决于数据复杂度和样本数量。</p>
+</details>
+<p><strong>练习8.3</strong> 采样策略对比
+比较均匀采样、重要性采样和自适应采样对DeepSDF训练的影响。设计度量标准评估采样效率。</p>
+<p><em>Hint</em>: 考虑表面附近的梯度信息最丰富。</p>
+<details>
+<summary>参考答案</summary>
+<p>三种采样策略：</p>
+<ol>
+<li>
+<p><strong>均匀采样</strong>：
+   - 实现：$\mathbf{x} \sim \text{Uniform}([-1,1]^3)$
+   - 优点：无偏，实现简单
+   - 缺点：大部分样本远离表面，效率低</p>
+</li>
+<li>
+<p><strong>重要性采样</strong>：
+   - 实现：$\mathbf{x} = \mathbf{x}_{surface} + \epsilon \mathbf{n}$，$\epsilon \sim \mathcal{N}(0, \sigma^2)$
+   - 优点：集中在信息丰富区域
+   - 缺点：需要表面点和法向</p>
+</li>
+<li>
+<p><strong>自适应采样</strong>：
+   - 实现：基于当前误差动态调整
+   - 优点：针对性强
+   - 缺点：计算开销大</p>
+</li>
+</ol>
+<p>效率度量：
+$$\eta = \frac{\text{信息增益}}{\text{采样数量}} = \frac{\Delta L}{N_{samples}}$$
+实验表明重要性采样效率最高，收敛速度快3-5倍。</p>
+</details>
+<h3 id="_5">挑战题</h3>
+<p><strong>练习8.4</strong> 多分辨率隐式表示
+设计一个多分辨率的神经隐式表示架构，能够在不同细节层次高效编码形状。讨论如何实现细节层次的动态切换。</p>
+<p><em>Hint</em>: 参考图像处理中的小波变换和金字塔表示。</p>
+<details>
+<summary>参考答案</summary>
+<p>多分辨率架构设计：</p>
+<ol>
+<li>
+<p><strong>层次化隐码</strong>：
+$$\mathbf{z} = [\mathbf{z}_0, \mathbf{z}_1, ..., \mathbf{z}_L]$$
+其中 $\mathbf{z}_l$ 编码第 $l$ 层细节</p>
+</li>
+<li>
+<p><strong>渐进式解码</strong>：
+$$f_l(\mathbf{x}) = f_{l-1}(\mathbf{x}) + \Delta f_l(\mathbf{x}, \mathbf{z}_l)$$</p>
+</li>
+<li>
+<p><strong>频率分解</strong>：
+   使用不同频率的位置编码：
+$$\psi_l(\mathbf{x}) = [\sin(2^l\pi\mathbf{x}), \cos(2^l\pi\mathbf{x})]$$</p>
+</li>
+<li>
+<p><strong>动态细节控制</strong>：
+$$f(\mathbf{x}, \alpha) = \sum_{l=0}^L w_l(\alpha) f_l(\mathbf{x})$$
+其中 $\alpha \in [0,1]$ 控制细节级别</p>
+</li>
+</ol>
+<p>优势：</p>
+<ul>
+<li>支持LOD（细节层次）</li>
+<li>训练稳定（课程学习）</li>
+<li>存储高效（按需加载）</li>
+</ul>
+</details>
+<p><strong>练习8.5</strong> 拓扑感知损失函数
+设计一个损失函数，能够在训练神经隐式表示时保证拓扑正确性（如亏格数、连通分量数）。</p>
+<p><em>Hint</em>: 考虑持久同调（Persistent Homology）理论。</p>
+<details>
+<summary>参考答案</summary>
+<p>拓扑感知损失设计：</p>
+<ol>
+<li>
+<p><strong>Betti数匹配</strong>：
+$$L_{topo} = \sum_{i=0}^2 |β_i(f_\theta) - β_i^{gt}|$$
+其中 $β_i$ 是第 $i$ 个Betti数</p>
+</li>
+<li>
+<p><strong>持久性图距离</strong>：
+$$L_{persist} = W_p(PD(f_\theta), PD(f^{gt}))$$
+使用Wasserstein距离比较持久性图</p>
+</li>
+<li>
+<p><strong>可微近似</strong>：
+   使用软阈值函数：
+$$\tilde{f}(\mathbf{x}) = \sigma(k \cdot f(\mathbf{x}))$$
+计算Euler特征：
+$$\chi = \sum_{cubes} \tilde{\chi}_{local}$$</p>
+</li>
+<li>
+<p><strong>实现策略</strong>：
+   - 预计算目标拓扑特征
+   - 周期性评估当前拓扑
+   - 渐进增加拓扑损失权重</p>
+</li>
+</ol>
+<p>挑战：</p>
+<ul>
+<li>拓扑特征的离散性</li>
+<li>计算复杂度高</li>
+<li>需要平衡几何精度和拓扑正确性</li>
+</ul>
+</details>
+<p><strong>练习8.6</strong> 物理约束的隐式场学习
+如何在DeepSDF框架中引入物理约束（如体积守恒、质心位置、惯性矩）？设计相应的损失函数和优化策略。</p>
+<p><em>Hint</em>: 利用散度定理将体积分转化为面积分。</p>
+<details>
+<summary>参考答案</summary>
+<p>物理约束集成：</p>
+<ol>
+<li>
+<p><strong>体积守恒</strong>：
+   利用散度定理：
+$$V = \int_\Omega dV = \frac{1}{3}\int_{\partial\Omega} \mathbf{x} \cdot \mathbf{n} dS$$
+可微近似：
+$$L_{volume} = |V_{pred} - V_{target}|^2$$</p>
+</li>
+<li>
+<p><strong>质心约束</strong>：
+$$\mathbf{c} = \frac{1}{V}\int_\Omega \mathbf{x} dV$$
+损失函数：
+$$L_{centroid} = |\mathbf{c}_{pred} - \mathbf{c}_{target}|^2$$</p>
+</li>
+<li>
+<p><strong>惯性矩约束</strong>：
+$$I = \int_\Omega \rho(\mathbf{x})(\mathbf{x}^T\mathbf{x}I - \mathbf{x}\mathbf{x}^T) dV$$
+损失函数：
+$$L_{inertia} = |I_{pred} - I_{target}|_F^2$$</p>
+</li>
+<li>
+<p><strong>实现技巧</strong>：
+   - 使用Monte Carlo积分估计
+   - 重要性采样提高精度
+   - 梯度截断避免数值不稳定</p>
+</li>
+</ol>
+<p>总损失：
+$$L = L_{rec} + \lambda_1 L_{volume} + \lambda_2 L_{centroid} + \lambda_3 L_{inertia}$$</p>
+</details>
+<p><strong>练习8.7</strong> 时序形状的隐式表示
+设计一个能够表示时变形状（4D）的神经隐式架构。讨论如何保证时间连续性和运动合理性。</p>
+<p><em>Hint</em>: 将时间作为额外输入维度，考虑光流约束。</p>
+<details>
+<summary>参考答案</summary>
+<p>4D隐式表示架构：</p>
+<ol>
+<li>
+<p><strong>时空SDF函数</strong>：
+$$f(\mathbf{x}, t, \mathbf{z}): \mathbb{R}^3 \times \mathbb{R} \times \mathbb{R}^d \rightarrow \mathbb{R}$$</p>
+</li>
+<li>
+<p><strong>运动场分解</strong>：
+$$f(\mathbf{x}, t) = f_0(\mathbf{x} - \mathbf{v}(\mathbf{x}, t)) + \Delta f(\mathbf{x}, t)$$
+其中 $\mathbf{v}$ 是速度场</p>
+</li>
+<li>
+<p><strong>时间连续性约束</strong>：
+$$L_{temporal} = \int |\frac{\partial f}{\partial t}|^2 dt$$</p>
+</li>
+<li>
+<p><strong>场景流一致性</strong>：
+$$L_{flow} = |\frac{\partial f}{\partial t} + \nabla f \cdot \mathbf{v}|^2$$</p>
+</li>
+<li>
+<p><strong>循环一致性</strong>（对周期运动）：
+$$L_{cycle} = |f(\mathbf{x}, T) - f(\mathbf{x}, 0)|^2$$</p>
+</li>
+</ol>
+<p>实现细节：</p>
+<ul>
+<li>时间位置编码：$\gamma(t) = [\sin(2\pi ft), \cos(2\pi ft)]_{f \in F}$</li>
+<li>LSTM/GRU编码时序依赖</li>
+<li>关键帧插值 + 残差细节</li>
+</ul>
+<p>应用：</p>
+<ul>
+<li>动画序列压缩</li>
+<li>运动捕捉数据处理</li>
+<li>物理仿真结果编码</li>
+</ul>
+</details>
+<h2 id="gotchas">常见陷阱与错误（Gotchas）</h2>
+<h3 id="1">1. 训练不收敛问题</h3>
+<p><strong>问题表现</strong>：</p>
+<ul>
+<li>损失震荡不降</li>
+<li>SDF值爆炸或全零</li>
+<li>生成形状坍缩</li>
+</ul>
+<p><strong>常见原因与解决</strong>：</p>
+<ul>
+<li><strong>初始化不当</strong>：使用几何感知初始化，如SIREN的特殊初始化</li>
+<li><strong>学习率过大</strong>：SDF对学习率敏感，建议从1e-4开始</li>
+<li><strong>采样不均</strong>：确保正负样本平衡，表面附近密集采样</li>
+<li><strong>缺少正则化</strong>：添加Eikonal约束稳定梯度</li>
+</ul>
+<h3 id="2">2. 隐码优化陷阱</h3>
+<p><strong>问题表现</strong>：</p>
+<ul>
+<li>测试时优化不收敛</li>
+<li>重建质量差</li>
+<li>优化时间过长</li>
+</ul>
+<p><strong>调试技巧</strong>：</p>
+<div class="codehilite"><pre><span></span><code>检查清单：
+□ 隐码初始化是否在训练分布内
+□ 优化步数是否足够（通常需要500-1000步）
+□ 正则化权重是否合适（过大导致欠拟合）
+□ 采样点是否覆盖整个形状
+</code></pre></div>
+
+<h3 id="3-artifacts">3. 网格提取artifacts</h3>
+<p><strong>常见问题</strong>：</p>
+<ul>
+<li>表面不光滑，出现"阶梯"</li>
+<li>薄结构丢失</li>
+<li>拓扑错误（洞或分离组件）</li>
+</ul>
+<p><strong>解决方案</strong>：</p>
+<ul>
+<li>提高Marching Cubes分辨率</li>
+<li>使用梯度信息精化顶点位置</li>
+<li>后处理：平滑 + 拓扑修复</li>
+<li>训练时加强Eikonal约束</li>
+</ul>
+<h3 id="4">4. 过拟合与泛化</h3>
+<p><strong>症状识别</strong>：</p>
+<ul>
+<li>训练集完美，测试集糟糕</li>
+<li>隐空间插值产生不合理形状</li>
+<li>对噪声极度敏感</li>
+</ul>
+<p><strong>预防措施</strong>：</p>
+<ul>
+<li>数据增强：随机旋转、缩放、噪声</li>
+<li>Dropout和权重衰减</li>
+<li>隐码维度不要过大</li>
+<li>使用VAE框架增加先验约束</li>
+</ul>
+<h3 id="5">5. 计算效率问题</h3>
+<p><strong>性能瓶颈</strong>：</p>
+<ul>
+<li>批量SDF查询慢</li>
+<li>内存消耗大</li>
+<li>网格提取耗时</li>
+</ul>
+<p><strong>优化策略</strong>：</p>
+<ul>
+<li>使用向量化操作代替循环</li>
+<li>层次化空间数据结构（八叉树）</li>
+<li>GPU并行化关键操作</li>
+<li>缓存中间结果</li>
+</ul>
+<h3 id="6">6. 数值稳定性</h3>
+<p><strong>不稳定现象</strong>：</p>
+<ul>
+<li>梯度爆炸/消失</li>
+<li>NaN或Inf出现</li>
+<li>训练中期突然崩溃</li>
+</ul>
+<p><strong>稳定技巧</strong>：</p>
+<ul>
+<li>梯度裁剪：<code>torch.nn.utils.clip_grad_norm_</code></li>
+<li>使用稳定的激活函数（避免纯ReLU）</li>
+<li>批归一化或层归一化</li>
+<li>混合精度训练时注意损失缩放</li>
+</ul>
+<p>记住：调试神经隐式表示需要耐心和系统性方法。建议维护详细的实验日志，记录每个配置的效果。</p>
+            </article>
+            
+            <nav class="page-nav"><a href="chapter7.html" class="nav-link prev">← 第7章：神经隐式表示基础</a><a href="chapter9.html" class="nav-link next">第9章：可微分网格提取 →</a></nav>
+        </main>
+    </div>
+</body>
+</html>

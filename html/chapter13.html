@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="./">
+    <title>第13章：3D扩散模型基础</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="assets/highlight.css">
+    <script src="assets/script.js" defer></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']],
+                processEscapes: false,
+                packages: {'[+]': ['noerrors', 'ams']}
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            },
+            loader: {
+                load: ['[tex]/noerrors', '[tex]/ams']
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3>目录</h3>
+                <button id="sidebar-toggle" class="sidebar-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            <div class="sidebar-search">
+                <input type="text" id="sidebar-search-input" placeholder="搜索..." autocomplete="off">
+            </div>
+            <div id="tree-container">
+                <nav class="tree-nav" role="tree">
+                    <div class="tree-item " >
+                        <a href="index.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">3D 网格生成完整教程</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter1.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第1章：3D表示基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter2.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第2章：几何处理基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter3.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第3章：采样理论与重建基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter4.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第4章：Marching Cubes与体素方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter5.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第5章：Poisson表面重建</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter6.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第6章：基于Delaunay的重建方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter7.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第7章：神经隐式表示基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter8.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第8章：DeepSDF与Occupancy Networks</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter9.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第9章：可微分网格提取</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter10.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第10章：基于变形的网格生成</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter11.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第11章：参数化曲面方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter12.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第12章：序列生成方法</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item active" >
+                        <a href="chapter13.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第13章：3D扩散模型基础</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter14.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第14章：文本/图像驱动的3D生成</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter15.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第15章：前馈式快速生成</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="chapter16.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">第16章：多视图重建与新型表示</span>
+                        </a>
+                    </div>
+                
+                    <div class="tree-item " >
+                        <a href="CLAUDE.html" class="tree-link">
+                            <span class="tree-icon">📄</span>
+                            <span class="tree-title">1) 经典几何重建：点云/体素 → 网格</span>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </nav>
+        
+        <main class="content">
+            <article>
+                <h1 id="133d">第13章：3D扩散模型基础</h1>
+<p>扩散模型作为当前最强大的生成模型之一，通过模拟物理扩散过程实现了高质量的3D网格生成。本章深入探讨扩散模型的数学原理及其在3D几何数据上的应用，包括前向噪声添加过程、逆向去噪生成过程、Score-based理论框架、3D特定的噪声调度策略以及条件控制机制。通过本章学习，读者将掌握扩散模型的核心理论，为理解DreamFusion、Point-E、Shap-E等前沿3D生成方法奠定坚实基础。</p>
+<h2 id="131">13.1 扩散过程的数学原理</h2>
+<h3 id="1311">13.1.1 前向扩散过程</h3>
+<p>扩散模型的核心思想源于非平衡热力学，通过定义一个逐步破坏数据结构的马尔可夫链，将复杂的数据分布转换为简单的高斯分布。这个过程模拟了物理世界中的布朗运动，粒子从有序状态逐渐扩散到无序状态。</p>
+<p>对于3D网格顶点坐标 $\mathbf{x}_0 \in \mathbb{R}^{N \times 3}$，前向扩散过程定义为：</p>
+<p>$$q(\mathbf{x}_t|\mathbf{x}_{t-1}) = \mathcal{N}(\mathbf{x}_t; \sqrt{1-\beta_t}\mathbf{x}_{t-1}, \beta_t\mathbf{I})$$
+其中 $\beta_t \in (0,1)$ 控制第 $t$ 步的噪声强度，通常满足 $\beta_1 &lt; \beta_2 &lt; ... &lt; \beta_T$，保证信息逐渐丢失。整个前向过程形成马尔可夫链：
+$$q(\mathbf{x}_{1:T}|\mathbf{x}_0) = \prod_{t=1}^{T} q(\mathbf{x}_t|\mathbf{x}_{t-1})$$
+通过递推关系，可以推导出从 $\mathbf{x}_0$ 直接到 $\mathbf{x}_t$ 的边际分布。令 $\alpha_t = 1-\beta_t$，$\bar{\alpha}_t = \prod_{s=1}^{t}\alpha_s$，则有：
+$$q(\mathbf{x}_t|\mathbf{x}_0) = \mathcal{N}(\mathbf{x}_t; \sqrt{\bar{\alpha}_t}\mathbf{x}_0, (1-\bar{\alpha}_t)\mathbf{I})$$
+<strong>推导过程</strong>：利用高斯分布的可加性，从 $\mathbf{x}_0$ 到 $\mathbf{x}_1$：
+$$\mathbf{x}_1 = \sqrt{\alpha_1}\mathbf{x}_0 + \sqrt{1-\alpha_1}\boldsymbol{\epsilon}_1$$
+从 $\mathbf{x}_1$ 到 $\mathbf{x}_2$：
+$$\mathbf{x}_2 = \sqrt{\alpha_2}\mathbf{x}_1 + \sqrt{1-\alpha_2}\boldsymbol{\epsilon}_2 = \sqrt{\alpha_2\alpha_1}\mathbf{x}_0 + \sqrt{\alpha_2(1-\alpha_1)}\boldsymbol{\epsilon}_1 + \sqrt{1-\alpha_2}\boldsymbol{\epsilon}_2$$
+由于 $\boldsymbol{\epsilon}_1$ 和 $\boldsymbol{\epsilon}_2$ 独立，合并后的噪声仍为高斯分布，方差为：
+$$\alpha_2(1-\alpha_1) + (1-\alpha_2) = 1 - \alpha_2\alpha_1 = 1 - \bar{\alpha}_2$$
+重参数化形式提供了高效的采样方式：
+$$\mathbf{x}_t = \sqrt{\bar{\alpha}_t}\mathbf{x}_0 + \sqrt{1-\bar{\alpha}_t}\boldsymbol{\epsilon}, \quad \boldsymbol{\epsilon} \sim \mathcal{N}(0, \mathbf{I})$$
+这个性质使得我们可以在任意时间步直接采样，无需递归计算，大大提高了训练效率。对于3D网格，这意味着每个顶点独立地添加噪声，但噪声强度在全局保持一致。</p>
+<p><strong>信噪比分析</strong>：定义信噪比 $\text{SNR}(t) = \bar{\alpha}_t / (1-\bar{\alpha}_t)$，随着 $t$ 增加，SNR单调递减：</p>
+<ul>
+<li>$t=0$: $\text{SNR}(0) = \infty$（纯信号）</li>
+<li>$t=T$: $\text{SNR}(T) \approx 0$（纯噪声）</li>
+</ul>
+<div class="codehilite"><pre><span></span><code><span class="err">扩散过程可视化</span><span class="o">:</span>
+<span class="n">t</span><span class="o">=</span><span class="mi">0</span><span class="w">      </span><span class="n">t</span><span class="o">=</span><span class="n">T</span><span class="sr">/4     t=T/2     t=3T/</span><span class="mi">4</span><span class="w">    </span><span class="n">t</span><span class="o">=</span><span class="n">T</span>
+<span class="w"> </span><span class="err">╱╲</span><span class="w">       </span><span class="err">╱</span><span class="w"> </span><span class="err">╲</span><span class="w">       </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w">       </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w">      </span><span class="err">·</span><span class="w"> </span><span class="err">·</span>
+<span class="err">╱──╲</span><span class="w">     </span><span class="err">╱</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">╲</span><span class="w">     </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w">     </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w">    </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span>
+<span class="err">────</span><span class="w">     </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w">     </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w">   </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w">  </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span>
+<span class="err">结构清晰</span><span class="w">  </span><span class="err">轮廓模糊</span><span class="w">  </span><span class="err">形状消失</span><span class="w">  </span><span class="err">接近噪声</span><span class="w">  </span><span class="err">纯高斯噪声</span>
+<span class="n">SNR</span><span class="o">=</span><span class="err">∞</span><span class="w">    </span><span class="n">SNR</span><span class="err">≈</span><span class="mi">10</span><span class="w">    </span><span class="n">SNR</span><span class="err">≈</span><span class="mi">1</span><span class="w">     </span><span class="n">SNR</span><span class="err">≈</span><span class="mf">0.1</span><span class="w">   </span><span class="n">SNR</span><span class="err">≈</span><span class="mi">0</span>
+</code></pre></div>
+
+<h3 id="1312">13.1.2 逆向去噪过程</h3>
+<p>逆向过程是扩散模型的生成阶段，目标是从噪声 $\mathbf{x}_T \sim \mathcal{N}(0, \mathbf{I})$ 逐步恢复到原始数据分布 $p(\mathbf{x}_0)$。理论上，如果知道真实的后验分布 $q(\mathbf{x}_{t-1}|\mathbf{x}_t, \mathbf{x}_0)$，就可以完美逆转扩散过程。</p>
+<p><strong>后验分布的解析形式</strong>：利用贝叶斯定理和高斯分布的性质，可以推导出：
+$$q(\mathbf{x}_{t-1}|\mathbf{x}_t, \mathbf{x}_0) = \mathcal{N}(\mathbf{x}_{t-1}; \tilde{\mu}_t(\mathbf{x}_t, \mathbf{x}_0), \tilde{\beta}_t\mathbf{I})$$
+其中均值和方差为：
+$$\tilde{\mu}_t(\mathbf{x}_t, \mathbf{x}_0) = \frac{\sqrt{\bar{\alpha}_{t-1}}\beta_t}{1-\bar{\alpha}_t}\mathbf{x}_0 + \frac{\sqrt{\alpha_t}(1-\bar{\alpha}_{t-1})}{1-\bar{\alpha}_t}\mathbf{x}_t$$</p>
+<p>$$\tilde{\beta}_t = \frac{1-\bar{\alpha}_{t-1}}{1-\bar{\alpha}_t} \cdot \beta_t$$
+实际中，我们无法访问 $\mathbf{x}_0$，因此通过参数化的神经网络学习逆向分布：
+$$p_\theta(\mathbf{x}_{t-1}|\mathbf{x}_t) = \mathcal{N}(\mathbf{x}_{t-1}; \mu_\theta(\mathbf{x}_t, t), \Sigma_\theta(\mathbf{x}_t, t))$$
+<strong>变分下界（ELBO）</strong>：训练目标是最大化对数似然的下界：
+$$\log p(\mathbf{x}_0) \geq \mathbb{E}_q \left[ \log p(\mathbf{x}_T) - \sum_{t=1}^{T} D_{KL}(q(\mathbf{x}_{t-1}|\mathbf{x}_t,\mathbf{x}_0) || p_\theta(\mathbf{x}_{t-1}|\mathbf{x}_t)) \right]$$
+将损失函数分解为三部分：
+$$\mathcal{L} = \underbrace{D_{KL}(q(\mathbf{x}_T|\mathbf{x}_0) || p(\mathbf{x}_T))}_{L_T} + \sum_{t&gt;1} \underbrace{D_{KL}(q(\mathbf{x}_{t-1}|\mathbf{x}_t,\mathbf{x}_0) || p_\theta(\mathbf{x}_{t-1}|\mathbf{x}_t))}_{L_{t-1}} - \underbrace{\log p_\theta(\mathbf{x}_0|\mathbf{x}_1)}_{L_0}$$
+其中 $L_T$ 在扩散过程充分长时接近零（$\mathbf{x}_T$ 接近标准高斯），$L_0$ 是重建项，$L_{t-1}$ 是去噪匹配项。</p>
+<h3 id="1313">13.1.3 噪声预测参数化</h3>
+<p>Ho等人(2020)提出了一个关键洞察：与其直接预测 $\mu_\theta$，不如让网络预测添加的噪声 $\epsilon$，这大大简化了训练过程。</p>
+<p><strong>参数化选择</strong>：由于 $\mathbf{x}_t = \sqrt{\bar{\alpha}_t}\mathbf{x}_0 + \sqrt{1-\bar{\alpha}_t}\epsilon$，可以表示：
+$$\mathbf{x}_0 = \frac{1}{\sqrt{\bar{\alpha}_t}}(\mathbf{x}_t - \sqrt{1-\bar{\alpha}_t}\epsilon)$$
+将此代入后验均值公式：
+$$\mu_\theta(\mathbf{x}_t, t) = \frac{1}{\sqrt{\alpha_t}}\left(\mathbf{x}_t - \frac{\beta_t}{\sqrt{1-\bar{\alpha}_t}}\epsilon_\theta(\mathbf{x}_t, t)\right)$$
+其中 $\epsilon_\theta(\mathbf{x}_t, t)$ 是神经网络，预测在时间步 $t$ 添加到 $\mathbf{x}_0$ 的噪声。</p>
+<p><strong>简化的训练损失</strong>：通过重参数化技巧，KL散度可以简化为：
+$$\mathcal{L}_{simple} = \mathbb{E}_{t \sim \mathcal{U}(1,T), \mathbf{x}_0, \epsilon} \left[ ||\epsilon - \epsilon_\theta(\mathbf{x}_t, t)||^2 \right]$$
+训练算法极其简洁：</p>
+<ol>
+<li>采样时间步：$t \sim \text{Uniform}(1, T)$</li>
+<li>采样噪声：$\epsilon \sim \mathcal{N}(0, \mathbf{I})$</li>
+<li>构造噪声样本：$\mathbf{x}_t = \sqrt{\bar{\alpha}_t}\mathbf{x}_0 + \sqrt{1-\bar{\alpha}_t}\epsilon$</li>
+<li>优化损失：$||\epsilon - \epsilon_\theta(\mathbf{x}_t, t)||^2$</li>
+</ol>
+<p><strong>方差的处理</strong>：对于方差 $\Sigma_\theta(\mathbf{x}_t, t)$，常见做法：</p>
+<ul>
+<li>固定为 $\tilde{\beta}_t\mathbf{I}$（DDPM）</li>
+<li>固定为 $\beta_t\mathbf{I}$（简化版本）</li>
+<li>学习插值系数：$\Sigma_\theta = \exp(v_\theta \log \beta_t + (1-v_\theta) \log \tilde{\beta}_t)$</li>
+</ul>
+<p><strong>3D网格的特殊考虑</strong>：</p>
+<ul>
+<li><strong>坐标归一化</strong>：将顶点坐标归一化到 $[-1, 1]^3$ 内</li>
+<li><strong>批归一化</strong>：对每个网格独立归一化，保持形状不变性</li>
+<li><strong>加权损失</strong>：根据顶点重要性（如曲率、面积）加权：
+$$\mathcal{L}_{weighted} = \mathbb{E} \left[ \sum_{i=1}^{N} w_i ||\epsilon_i - \epsilon_\theta(\mathbf{x}_t, t)_i||^2 \right]$$</li>
+</ul>
+<h3 id="1314-3d">13.1.4 3D数据的特殊考虑</h3>
+<p>3D网格数据具有独特的几何和拓扑性质，在应用扩散模型时需要特殊处理以保证生成质量和几何合理性。</p>
+<ol>
+<li><strong>旋转不变性与等变性</strong></li>
+</ol>
+<p>3D物体在不同方向观察应该是同一物体，因此模型需要处理旋转对称性：</p>
+<ul>
+<li>
+<p><strong>数据增强</strong>：训练时对网格施加随机SO(3)旋转：
+$$\mathbf{x}_0^{aug} = \mathbf{R} \cdot \mathbf{x}_0, \quad \mathbf{R} \in SO(3)$$</p>
+</li>
+<li>
+<p><strong>等变网络架构</strong>：使用SE(3)等变的网络层，如Vector Neurons或Tensor Field Networks</p>
+</li>
+<li>
+<p><strong>规范化对齐</strong>：通过PCA或其他方法将网格对齐到规范坐标系：
+$$\mathbf{C} = \frac{1}{N}\sum_{i=1}^{N} \mathbf{v}_i \mathbf{v}_i^T$$
+主轴由 $\mathbf{C}$ 的特征向量给出</p>
+</li>
+</ul>
+<ol start="2">
+<li><strong>尺度与平移归一化</strong></li>
+</ol>
+<p>不同来源的网格尺度差异巨大，需要标准化处理：</p>
+<ul>
+<li>
+<p><strong>中心化</strong>：将质心移至原点
+$$\mathbf{v}_i' = \mathbf{v}_i - \frac{1}{N}\sum_{j=1}^{N} \mathbf{v}_j$$</p>
+</li>
+<li>
+<p><strong>尺度归一化</strong>：常见方法包括：</p>
+</li>
+<li>单位球归一化：$\max_i ||\mathbf{v}_i|| = 1$</li>
+<li>单位方差归一化：$\text{Var}(\mathbf{v}) = 1$</li>
+<li>
+<p>包围盒归一化：缩放到 $[-1, 1]^3$</p>
+</li>
+<li>
+<p><strong>保持纵横比</strong>：使用统一缩放因子
+$$s = \frac{1}{\max(\text{bbox}_x, \text{bbox}_y, \text{bbox}_z)}$$</p>
+</li>
+</ul>
+<ol start="3">
+<li><strong>拓扑保持策略</strong></li>
+</ol>
+<p>扩散过程可能破坏网格的拓扑结构，导致自相交、非流形等问题：</p>
+<ul>
+<li>
+<p><strong>拓扑正则化损失</strong>：
+$$\mathcal{L}_{topo} = \lambda_1 \mathcal{L}_{edge} + \lambda_2 \mathcal{L}_{angle} + \lambda_3 \mathcal{L}_{manifold}$$
+其中：</p>
+</li>
+<li>
+<p>$\mathcal{L}_{edge}$：边长保持损失</p>
+</li>
+<li>$\mathcal{L}_{angle}$：二面角保持损失</li>
+<li>
+<p>$\mathcal{L}_{manifold}$：流形约束损失</p>
+</li>
+<li>
+<p><strong>分层扩散</strong>：先生成粗糙拓扑，再细化几何
+$$\mathbf{x}_0^{coarse} \rightarrow \mathbf{x}_0^{medium} \rightarrow \mathbf{x}_0^{fine}$$</p>
+</li>
+<li>
+<p><strong>隐式表示中介</strong>：通过SDF或占据场作为中间表示，保证水密性</p>
+</li>
+</ul>
+<ol start="4">
+<li><strong>网格连接性处理</strong></li>
+</ol>
+<p>网格不仅包含顶点位置，还有面片连接信息：</p>
+<ul>
+<li><strong>固定拓扑</strong>：保持面片连接不变，只改变顶点位置</li>
+<li>适用于同拓扑的形状变形</li>
+<li>
+<p>可使用图神经网络编码连接信息</p>
+</li>
+<li>
+<p><strong>动态拓扑</strong>：同时生成顶点和面片</p>
+</li>
+<li>使用PolyGen类序列生成</li>
+<li>
+<p>或通过隐式场提取</p>
+</li>
+<li>
+<p><strong>混合表示</strong>：
+$$\mathbf{x}_t = [\mathbf{V}_t, \mathbf{F}_{embed}]$$
+其中 $\mathbf{V}_t$ 是扩散的顶点，$\mathbf{F}_{embed}$ 是面片的学习嵌入</p>
+</li>
+</ul>
+<ol start="5">
+<li><strong>采样效率优化</strong></li>
+</ol>
+<p>3D数据维度高（$N \times 3$），需要特殊优化：</p>
+<ul>
+<li><strong>分块处理</strong>：将大网格分成局部patches</li>
+<li><strong>自适应采样</strong>：根据局部复杂度调整噪声步数</li>
+<li><strong>层级生成</strong>：从低分辨率到高分辨率逐步生成</li>
+</ul>
+<h2 id="132-score-based">13.2 Score-based生成模型</h2>
+<h3 id="1321-score">13.2.1 Score函数与扩散的联系</h3>
+<p>Score-based生成模型提供了扩散模型的另一种理论视角，通过估计数据分布的score函数（对数概率的梯度）来生成样本。这个框架由Song和Ermon(2019)提出，后来与扩散模型统一。</p>
+<p><strong>Score函数的定义与性质</strong></p>
+<p>Score函数定义为对数概率密度的梯度：
+$$\mathbf{s}(\mathbf{x}, t) = \nabla_\mathbf{x} \log p_t(\mathbf{x})$$
+Score函数具有重要性质：</p>
+<ul>
+<li><strong>无需归一化常数</strong>：$\nabla_\mathbf{x} \log p(\mathbf{x}) = \nabla_\mathbf{x} \log \tilde{p}(\mathbf{x})$，其中 $\tilde{p}$ 是未归一化分布</li>
+<li><strong>指向高概率方向</strong>：score指向概率密度增加最快的方向</li>
+<li><strong>期望为零</strong>：$\mathbb{E}_{p(\mathbf{x})}[\mathbf{s}(\mathbf{x})] = 0$（Stein恒等式）</li>
+</ul>
+<p><strong>扩散过程的Score</strong></p>
+<p>对于扩散过程 $q(\mathbf{x}_t|\mathbf{x}_0) = \mathcal{N}(\mathbf{x}_t; \sqrt{\bar{\alpha}_t}\mathbf{x}_0, (1-\bar{\alpha}_t)\mathbf{I})$，其score函数为：
+$$\nabla_{\mathbf{x}_t} \log q(\mathbf{x}_t|\mathbf{x}_0) = -\frac{\mathbf{x}_t - \sqrt{\bar{\alpha}_t}\mathbf{x}_0}{1-\bar{\alpha}_t} = -\frac{\boldsymbol{\epsilon}}{\sqrt{1-\bar{\alpha}_t}}$$
+这建立了score函数与噪声的直接联系。</p>
+<p><strong>Score与噪声预测的等价性</strong></p>
+<p>扩散模型中的噪声预测网络 $\boldsymbol{\epsilon}_\theta(\mathbf{x}_t, t)$ 与score网络 $\mathbf{s}_\theta(\mathbf{x}_t, t)$ 存在简单关系：
+$$\mathbf{s}_\theta(\mathbf{x}_t, t) = -\frac{1}{\sqrt{1-\bar{\alpha}_t}}\boldsymbol{\epsilon}_\theta(\mathbf{x}_t, t)$$
+这意味着：</p>
+<ul>
+<li>训练噪声预测网络等价于训练score网络</li>
+<li>DDPM的损失函数可以理解为score matching损失</li>
+<li>两种视角可以互换使用</li>
+</ul>
+<p><strong>Tweedie公式与去噪</strong></p>
+<p>Tweedie公式提供了从噪声观测估计原始信号的方法：
+$$\mathbb{E}[\mathbf{x}_0|\mathbf{x}_t] = \frac{1}{\sqrt{\bar{\alpha}_t}}(\mathbf{x}_t + (1-\bar{\alpha}_t)\nabla_{\mathbf{x}_t} \log p_t(\mathbf{x}_t))$$
+将score函数代入：
+$$\hat{\mathbf{x}}_0 = \frac{1}{\sqrt{\bar{\alpha}_t}}(\mathbf{x}_t - \sqrt{1-\bar{\alpha}_t}\boldsymbol{\epsilon}_\theta(\mathbf{x}_t, t))$$
+这正是扩散模型中用于预测 $\mathbf{x}_0$ 的公式，展示了两个框架的深层联系。</p>
+<h3 id="1322-sde">13.2.2 连续时间扩散（SDE视角）</h3>
+<p>Song等人(2021)提出了基于随机微分方程(SDE)的统一框架，将离散时间扩散推广到连续时间，提供了更灵活的理论工具。</p>
+<p><strong>前向SDE</strong></p>
+<p>连续时间扩散过程可以描述为：
+$$d\mathbf{x} = \mathbf{f}(\mathbf{x}, t)dt + g(t)d\mathbf{w}$$
+其中：</p>
+<ul>
+<li>$\mathbf{f}(\mathbf{x}, t)$：漂移系数（drift）</li>
+<li>$g(t)$：扩散系数（diffusion）</li>
+<li>$\mathbf{w}$：标准维纳过程（布朗运动）</li>
+</ul>
+<p>对于variance preserving (VP) SDE：
+$$\mathbf{f}(\mathbf{x}, t) = -\frac{1}{2}\beta(t)\mathbf{x}, \quad g(t) = \sqrt{\beta(t)}$$
+对于variance exploding (VE) SDE：
+$$\mathbf{f}(\mathbf{x}, t) = \mathbf{0}, \quad g(t) = \sqrt{\frac{d[\sigma^2(t)]}{dt}}$$
+<strong>边际分布</strong></p>
+<p>VP-SDE的边际分布为：
+$$p_{0t}(\mathbf{x}_t|\mathbf{x}_0) = \mathcal{N}(\mathbf{x}_t; \mathbf{x}_0e^{-\frac{1}{2}\int_0^t \beta(s)ds}, \mathbf{I}(1-e^{-\int_0^t \beta(s)ds}))$$
+这与离散DDPM在连续极限下一致。</p>
+<p><strong>逆向SDE</strong></p>
+<p>Anderson(1982)证明了前向SDE存在对应的逆向SDE：
+$$d\mathbf{x} = [\mathbf{f}(\mathbf{x}, t) - g(t)^2 \nabla_\mathbf{x} \log p_t(\mathbf{x})]dt + g(t)d\bar{\mathbf{w}}$$
+其中 $\bar{\mathbf{w}}$ 是逆向时间的布朗运动。这个公式的关键是score函数 $\nabla_\mathbf{x} \log p_t(\mathbf{x})$。</p>
+<p><strong>数值求解</strong></p>
+<p>使用Euler-Maruyama方法离散化：
+$$\mathbf{x}_{t-\Delta t} = \mathbf{x}_t - [\mathbf{f}(\mathbf{x}_t, t) - g(t)^2 \mathbf{s}_\theta(\mathbf{x}_t, t)]\Delta t + g(t)\sqrt{\Delta t}\mathbf{z}$$
+其中 $\mathbf{z} \sim \mathcal{N}(0, \mathbf{I})$。</p>
+<p><strong>SDE的优势</strong></p>
+<ol>
+<li><strong>统一框架</strong>：DDPM、SMLD、DDIM等都是特例</li>
+<li><strong>灵活性</strong>：可设计新的SDE对</li>
+<li><strong>理论工具</strong>：可借用随机分析的成熟理论</li>
+<li><strong>可控生成</strong>：通过修改drift项实现条件生成</li>
+</ol>
+<h3 id="1323-ode">13.2.3 概率流ODE</h3>
+<p>通过去除SDE中的随机项，可以得到确定性的常微分方程(ODE)，其边际分布与原SDE相同。</p>
+<p><strong>概率流ODE推导</strong></p>
+<p>对于任意前向SDE，存在对应的概率流ODE：
+$$\frac{d\mathbf{x}}{dt} = \mathbf{f}(\mathbf{x}, t) - \frac{1}{2}g(t)^2 \nabla_\mathbf{x} \log p_t(\mathbf{x})$$
+这个ODE的特点：</p>
+<ul>
+<li><strong>确定性</strong>：给定初始条件，轨迹唯一确定</li>
+<li><strong>可逆性</strong>：可以精确重建编码过程</li>
+<li><strong>边际分布相同</strong>：$p_t(\mathbf{x})$ 与SDE一致</li>
+</ul>
+<p><strong>与神经ODE的联系</strong></p>
+<p>概率流ODE可以看作神经ODE的特例：
+$$\frac{d\mathbf{x}}{dt} = f_\theta(\mathbf{x}, t)$$
+其中 $f_\theta = \mathbf{f} - \frac{1}{2}g^2 \mathbf{s}_\theta$。</p>
+<p><strong>快速采样</strong></p>
+<p>ODE求解器通常比SDE更高效：</p>
+<ul>
+<li><strong>高阶方法</strong>：RK45、DPM-Solver等</li>
+<li><strong>自适应步长</strong>：根据局部误差调整</li>
+<li><strong>并行化</strong>：批量ODE求解</li>
+</ul>
+<p>对于3D网格生成，ODE特别有用：</p>
+<ol>
+<li><strong>插值</strong>：在隐空间进行平滑插值</li>
+<li><strong>编辑</strong>：精确控制生成过程</li>
+<li><strong>压缩</strong>：将网格编码为隐变量</li>
+</ol>
+<p><strong>数值求解器选择</strong></p>
+<p>不同求解器的权衡：</p>
+<ul>
+<li><strong>Euler方法</strong>：简单但需要小步长</li>
+<li><strong>Heun方法</strong>：二阶精度，适中复杂度</li>
+<li><strong>RK45</strong>：自适应高精度，但计算量大</li>
+<li><strong>DPM-Solver</strong>：专为扩散模型设计，效率高</li>
+</ul>
+<h3 id="1324-score-matching">13.2.4 Score matching训练</h3>
+<p>Score matching提供了直接训练score函数的方法，无需知道归一化常数。</p>
+<p><strong>Denoising Score Matching (DSM)</strong></p>
+<p>Vincent(2011)提出的去噪score matching：
+$$\mathcal{L}_{DSM} = \mathbb{E}_{\mathbf{x}_0 \sim p_{data}} \mathbb{E}_{\tilde{\mathbf{x}} \sim q(\tilde{\mathbf{x}}|\mathbf{x}_0)} \left[ ||\mathbf{s}_\theta(\tilde{\mathbf{x}}, \sigma) - \nabla_{\tilde{\mathbf{x}}} \log q(\tilde{\mathbf{x}}|\mathbf{x}_0)||^2 \right]$$
+其中 $q(\tilde{\mathbf{x}}|\mathbf{x}_0) = \mathcal{N}(\tilde{\mathbf{x}}; \mathbf{x}_0, \sigma^2\mathbf{I})$。</p>
+<p><strong>时间相关的Score Matching</strong></p>
+<p>对于扩散过程，需要匹配所有时间的score：
+$$\mathcal{L}_{score} = \mathbb{E}_{t \sim \mathcal{U}(0,T)} \mathbb{E}_{\mathbf{x}_0, \mathbf{x}_t} \left[ \lambda(t) ||\mathbf{s}_\theta(\mathbf{x}_t, t) - \nabla_{\mathbf{x}_t} \log q(\mathbf{x}_t|\mathbf{x}_0)||^2 \right]$$
+<strong>权重函数设计</strong></p>
+<p>$\lambda(t)$ 的选择影响训练效果：</p>
+<ol>
+<li>
+<p><strong>常数权重</strong>：$\lambda(t) = 1$
+   - 简单但可能不平衡</p>
+</li>
+<li>
+<p><strong>信噪比权重</strong>：$\lambda(t) = \text{SNR}(t) = \bar{\alpha}_t/(1-\bar{\alpha}_t)$
+   - 平衡不同噪声水平的贡献</p>
+</li>
+<li>
+<p><strong>最小方差权重</strong>：$\lambda(t) = g(t)^2$
+   - 理论最优但实践中需调整</p>
+</li>
+<li>
+<p><strong>几何感知权重</strong>（3D特定）：
+$$\lambda(t, \mathbf{x}) = \lambda_{base}(t) \cdot \exp(-\gamma \cdot \text{curvature}(\mathbf{x}))$$</p>
+</li>
+</ol>
+<ul>
+<li>高曲率区域给予更多关注</li>
+</ul>
+<p><strong>Sliced Score Matching (SSM)</strong></p>
+<p>对于高维3D数据，可使用切片score matching降低计算：
+$$\mathcal{L}_{SSM} = \mathbb{E}_{\mathbf{v} \sim p_{\mathbf{v}}} \mathbb{E}_{\mathbf{x}} \left[ \frac{1}{2}(\mathbf{v}^T \mathbf{s}_\theta(\mathbf{x}))^2 + \mathbf{v}^T \nabla_\mathbf{x} (\mathbf{v}^T \mathbf{s}_\theta(\mathbf{x})) \right]$$
+其中 $\mathbf{v}$ 是随机投影方向。</p>
+<p><strong>3D网格的Score Matching优化</strong></p>
+<ol>
+<li>
+<p><strong>分层训练</strong>：
+   - 先训练粗尺度score
+   - 逐步细化到精细尺度</p>
+</li>
+<li>
+<p><strong>局部Score</strong>：
+$$\mathbf{s}_{local}(\mathbf{x}_i) = \sum_{j \in \mathcal{N}(i)} w_{ij} \mathbf{s}_\theta(\mathbf{x}_j)$$</p>
+</li>
+</ol>
+<ul>
+<li>利用网格局部结构</li>
+</ul>
+<ol start="3">
+<li>
+<p><strong>等变Score网络</strong>：
+   - 保证 $\mathbf{s}_\theta(\mathbf{R}\mathbf{x}) = \mathbf{R}\mathbf{s}_\theta(\mathbf{x})$
+   - 提高泛化能力</p>
+</li>
+<li>
+<p><strong>多尺度损失</strong>：
+$$\mathcal{L}_{multi} = \sum_{k=1}^{K} w_k \mathcal{L}_{score}^{(k)}$$</p>
+</li>
+</ol>
+<ul>
+<li>不同分辨率同时训练</li>
+</ul>
+<h2 id="133-3d">13.3 3D数据的噪声调度</h2>
+<h3 id="1331">13.3.1 线性调度与余弦调度</h3>
+<p>经典的线性调度：
+$$\beta_t = \beta_{min} + \frac{t-1}{T-1}(\beta_{max} - \beta_{min})$$
+余弦调度提供更平滑的信噪比变化：
+$$\bar{\alpha}_t = \frac{f(t)}{f(0)}, \quad f(t) = \cos\left(\frac{t/T + s}{1 + s} \cdot \frac{\pi}{2}\right)^2$$</p>
+<h3 id="1332">13.3.2 几何感知的噪声调度</h3>
+<p>对于3D网格，可以设计几何感知的噪声调度：</p>
+<ol>
+<li>
+<p><strong>多尺度调度</strong>：对不同频率的几何特征使用不同的噪声强度
+$$\beta_t^{(k)} = \beta_t \cdot w_k$$
+其中 $w_k$ 是第 $k$ 个特征频带的权重</p>
+</li>
+<li>
+<p><strong>自适应调度</strong>：基于局部曲率调整噪声强度
+$$\beta_t(v_i) = \beta_t \cdot (1 + \lambda \cdot \kappa_i)$$
+其中 $\kappa_i$ 是顶点 $v_i$ 处的平均曲率</p>
+</li>
+</ol>
+<h3 id="1333">13.3.3 拓扑保持的噪声策略</h3>
+<p>为保持网格拓扑，可以采用以下策略：</p>
+<ol>
+<li>
+<p><strong>约束噪声</strong>：限制噪声在切空间内
+$$x_t = x_0 + P_{T(x_0)} \epsilon$$
+其中 $P_{T(x_0)}$ 是到切空间的投影算子</p>
+</li>
+<li>
+<p><strong>边长保持</strong>：通过拉格朗日乘子维护边长约束
+$$\min_x ||x - x_{noisy}||^2 + \lambda \sum_{(i,j) \in E} (||x_i - x_j|| - l_{ij})^2$$</p>
+</li>
+</ol>
+<div class="codehilite"><pre><span></span><code><span class="err">噪声调度对比图</span><span class="o">:</span>
+<span class="err">信噪比</span>
+<span class="w">  </span><span class="err">↑</span>
+<span class="mf">1.0</span><span class="err">│●</span><span class="w">                    </span><span class="err">线性调度</span>
+<span class="w">   </span><span class="err">│</span><span class="w"> </span><span class="err">●●</span><span class="w">                  </span>
+<span class="w">   </span><span class="err">│</span><span class="w">   </span><span class="err">●●●</span><span class="w">               </span><span class="err">余弦调度</span>
+<span class="mf">0.5</span><span class="err">│</span><span class="w">      </span><span class="err">●●●●</span><span class="w">           </span><span class="o">....</span>
+<span class="w">   </span><span class="err">│</span><span class="w">          </span><span class="err">●●●●●</span><span class="w">      </span>
+<span class="w">   </span><span class="err">│</span><span class="w">              </span><span class="err">●●●●●●</span><span class="w"> </span><span class="err">几何感知调度</span>
+<span class="mf">0.0</span><span class="err">└────────────────────→</span>
+<span class="w">   </span><span class="mi">0</span><span class="w">                    </span><span class="n">T</span><span class="w"> </span><span class="err">时间步</span>
+</code></pre></div>
+
+<h3 id="1334">13.3.4 采样加速技术</h3>
+<ol>
+<li>
+<p><strong>DDIM采样</strong>：确定性隐式扩散模型
+$$x_{t-1} = \sqrt{\bar{\alpha}_{t-1}}\hat{x}_0 + \sqrt{1-\bar{\alpha}_{t-1}-\sigma_t^2}\epsilon_\theta(x_t, t) + \sigma_t z$$</p>
+</li>
+<li>
+<p><strong>步数自适应</strong>：根据局部复杂度动态调整采样步数</p>
+</li>
+<li>
+<p><strong>预测器-校正器方法</strong>：结合Langevin动力学进行局部细化</p>
+</li>
+</ol>
+<h2 id="134">13.4 条件生成与引导</h2>
+<h3 id="1341">13.4.1 条件扩散模型</h3>
+<p>条件生成的目标是学习 $p(x|y)$，其中 $y$ 是条件信息（如类别标签、文本描述、部分几何等）。</p>
+<p>条件score函数：
+$$\nabla_x \log p(x_t|y) = \nabla_x \log p(x_t) + \nabla_x \log p(y|x_t)$$</p>
+<h3 id="1342-classifier">13.4.2 Classifier引导</h3>
+<p>使用预训练的分类器 $p_\phi(y|x_t)$ 引导生成：
+$$\tilde{s}_\theta(x_t, t, y) = s_\theta(x_t, t) + w \cdot \nabla_{x_t} \log p_\phi(y|x_t)$$
+其中 $w$ 是引导强度。</p>
+<h3 id="1343-classifier-free">13.4.3 Classifier-free引导</h3>
+<p>无需额外分类器，通过联合训练条件和无条件模型：
+$$\tilde{\epsilon}_\theta(x_t, t, y) = (1+w) \cdot \epsilon_\theta(x_t, t, y) - w \cdot \epsilon_\theta(x_t, t, \emptyset)$$
+训练时随机dropout条件信息（通常概率为10%）。</p>
+<h3 id="1344-3d">13.4.4 3D特定的条件模态</h3>
+<ol>
+<li>
+<p><strong>视图条件</strong>：给定一个或多个2D视图生成3D网格
+   - 使用可微渲染计算视图一致性损失
+   - 多视图聚合策略</p>
+</li>
+<li>
+<p><strong>部分几何条件</strong>：补全残缺网格
+   - 掩码策略：$x_t^{masked} = m \odot x_t^{known} + (1-m) \odot x_t^{unknown}$
+   - 边界条件处理</p>
+</li>
+<li>
+<p><strong>语义条件</strong>：基于语义分割或功能描述
+   - 分层条件编码
+   - 注意力机制整合</p>
+</li>
+<li>
+<p><strong>物理约束条件</strong>：满足特定物理属性
+   - 软约束通过损失函数
+   - 硬约束通过投影算子</p>
+</li>
+</ol>
+<h3 id="1345">13.4.5 多模态融合策略</h3>
+<p>组合多种条件信息：
+$$s_{combined} = s_{unconditional} + \sum_{i} w_i \cdot \nabla_x \log p(c_i|x)$$
+权重 $w_i$ 可以是固定的或学习得到的。</p>
+<div class="codehilite"><pre><span></span><code><span class="err">条件引导示意图</span><span class="o">:</span>
+<span class="w">     </span><span class="err">无条件生成</span><span class="w">              </span><span class="err">条件引导后</span>
+<span class="w">      </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w">               </span><span class="err">╱───╲</span>
+<span class="w">     </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w">             </span><span class="err">╱</span><span class="w">     </span><span class="err">╲</span>
+<span class="w">    </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w">    </span><span class="o">+</span><span class="w">      </span><span class="err">│</span><span class="w">  </span><span class="err">椅子</span><span class="w">  </span><span class="err">│</span><span class="w">     </span><span class="o">=</span><span class="w">    </span><span class="err">精确的椅子形状</span>
+<span class="w">     </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w">             </span><span class="err">╲</span><span class="w">     </span><span class="err">╱</span><span class="w">             </span><span class="err">╱├─╲</span>
+<span class="w">      </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w"> </span><span class="err">·</span><span class="w">               </span><span class="err">╲───╱</span><span class="w">             </span><span class="err">╱</span><span class="w"> </span><span class="err">│</span><span class="w">  </span><span class="err">╲</span>
+<span class="w">       </span><span class="err">噪声</span><span class="w">               </span><span class="err">条件信息</span><span class="w">            </span><span class="err">生成结果</span>
+</code></pre></div>
+
+<h2 id="_1">本章小结</h2>
+<p>本章系统介绍了3D扩散模型的理论基础：</p>
+<ol>
+<li>
+<p><strong>扩散过程数学原理</strong>：
+   - 前向扩散：$q(x_t|x_0) = \mathcal{N}(x_t; \sqrt{\bar{\alpha}_t}x_0, (1-\bar{\alpha}_t)I)$
+   - 逆向去噪：$p_\theta(x_{t-1}|x_t)$ 通过神经网络参数化
+   - 训练目标：最小化噪声预测误差 $||\epsilon - \epsilon_\theta(x_t, t)||^2$</p>
+</li>
+<li>
+<p><strong>Score-based模型</strong>：
+   - Score函数：$s(x, t) = \nabla_x \log p_t(x)$
+   - SDE/ODE统一框架
+   - Score matching训练策略</p>
+</li>
+<li>
+<p><strong>3D噪声调度</strong>：
+   - 几何感知调度
+   - 拓扑保持策略
+   - 采样加速技术（DDIM、自适应步数）</p>
+</li>
+<li>
+<p><strong>条件生成机制</strong>：
+   - Classifier引导：$\tilde{s} = s + w \cdot \nabla \log p(y|x)$
+   - Classifier-free引导
+   - 3D特定条件（视图、部分几何、语义、物理约束）</p>
+</li>
+</ol>
+<p>掌握这些基础理论是理解和实现高质量3D网格生成的关键。</p>
+<h2 id="_2">练习题</h2>
+<h3 id="_3">基础题</h3>
+<p><strong>练习13.1</strong> 推导前向扩散过程的边际分布
+给定前向过程 $q(x_t|x_{t-1}) = \mathcal{N}(x_t; \sqrt{1-\beta_t}x_{t-1}, \beta_t I)$，证明：
+$$q(x_t|x_0) = \mathcal{N}(x_t; \sqrt{\bar{\alpha}_t}x_0, (1-\bar{\alpha}_t)I)$$
+<em>Hint</em>：使用重参数化技巧和高斯分布的叠加性质。</p>
+<details>
+<summary>答案</summary>
+<p>从 $x_0$ 开始，逐步应用前向过程：</p>
+<ul>
+<li>$x_1 = \sqrt{\alpha_1}x_0 + \sqrt{1-\alpha_1}\epsilon_1$</li>
+<li>$x_2 = \sqrt{\alpha_2}x_1 + \sqrt{1-\alpha_2}\epsilon_2 = \sqrt{\alpha_2\alpha_1}x_0 + \sqrt{\alpha_2(1-\alpha_1)}\epsilon_1 + \sqrt{1-\alpha_2}\epsilon_2$</li>
+</ul>
+<p>通过归纳可得：
+$$x_t = \sqrt{\bar{\alpha}_t}x_0 + \sqrt{1-\bar{\alpha}_t}\bar{\epsilon}$$
+其中 $\bar{\epsilon} \sim \mathcal{N}(0, I)$，因为独立高斯噪声的线性组合仍是高斯分布。
+方差项：$\alpha_2(1-\alpha_1) + (1-\alpha_2) = 1 - \alpha_2\alpha_1 = 1 - \bar{\alpha}_2$</p>
+<p>因此 $q(x_t|x_0) = \mathcal{N}(x_t; \sqrt{\bar{\alpha}_t}x_0, (1-\bar{\alpha}_t}I)$。</p>
+</details>
+<p><strong>练习13.2</strong> Score函数计算
+对于3D点云 $x \in \mathbb{R}^{N \times 3}$，如果 $p(x) \propto \exp(-||x - \mu||^2 / 2\sigma^2)$，计算score函数 $\nabla_x \log p(x)$。</p>
+<p><em>Hint</em>：先计算对数概率，然后求梯度。</p>
+<details>
+<summary>答案</summary>
+<p>$$\log p(x) = -\frac{||x - \mu||^2}{2\sigma^2} + C$$
+其中C是归一化常数（与x无关）。</p>
+<p>求梯度：
+$$\nabla_x \log p(x) = -\frac{1}{\sigma^2}(x - \mu)$$
+这个结果表明，score函数指向概率密度增加最快的方向，即从当前点指向均值的方向。
+对于3D点云的每个点，score是一个3维向量。</p>
+</details>
+<p><strong>练习13.3</strong> DDIM采样步骤推导
+给定DDIM的更新公式，证明当 $\sigma_t = 0$ 时，采样过程是确定性的。</p>
+<p><em>Hint</em>：分析DDIM公式中的随机项。</p>
+<details>
+<summary>答案</summary>
+<p>DDIM更新公式：
+$$x_{t-1} = \sqrt{\bar{\alpha}_{t-1}}\hat{x}_0 + \sqrt{1-\bar{\alpha}_{t-1}-\sigma_t^2}\epsilon_\theta(x_t, t) + \sigma_t z$$
+当 $\sigma_t = 0$ 时：
+$$x_{t-1} = \sqrt{\bar{\alpha}_{t-1}}\hat{x}_0 + \sqrt{1-\bar{\alpha}_{t-1}}\epsilon_\theta(x_t, t)$$
+其中 $\hat{x}_0 = \frac{1}{\sqrt{\bar{\alpha}_t}}(x_t - \sqrt{1-\bar{\alpha}_t}\epsilon_\theta(x_t, t))$</p>
+<p>代入得完全确定性的更新规则，不含随机项z。这使得生成过程可逆，便于插值和编辑。</p>
+</details>
+<p><strong>练习13.4</strong> 余弦噪声调度的信噪比
+计算余弦调度在 $t = T/2$ 时的信噪比（SNR），并与线性调度比较。</p>
+<p><em>Hint</em>：SNR定义为 $\bar{\alpha}_t / (1-\bar{\alpha}_t)$。</p>
+<details>
+<summary>答案</summary>
+<p>余弦调度：
+$$\bar{\alpha}_{T/2} = \cos^2\left(\frac{\pi/4 + s\pi/2}{1 + s}\right)$$
+取 $s = 0.008$（常用值）：
+$$\bar{\alpha}_{T/2} \approx \cos^2(0.78) \approx 0.52$$
+$$SNR_{cos} = \frac{0.52}{0.48} \approx 1.08$$
+线性调度（$\beta_t \in [0.0001, 0.02]$）：
+$$\bar{\alpha}_{T/2} \approx 0.98 \times 0.97 \times ... \approx 0.15$$
+$$SNR_{linear} = \frac{0.15}{0.85} \approx 0.18$$
+余弦调度在中间时刻保持更高的信噪比，有助于保留更多结构信息。</p>
+</details>
+<h3 id="_4">挑战题</h3>
+<p><strong>练习13.5</strong> 几何感知噪声设计
+设计一个基于网格局部特征（曲率、面积）的自适应噪声调度方案。要求：</p>
+<ol>
+<li>高曲率区域噪声较小</li>
+<li>保持全局噪声水平不变</li>
+<li>给出数学公式和归一化方法</li>
+</ol>
+<p><em>Hint</em>：考虑使用加权平均和softmax归一化。</p>
+<details>
+<summary>答案</summary>
+<p>设顶点 $i$ 的高斯曲率为 $K_i$，平均曲率为 $H_i$，定义局部几何复杂度：
+$$g_i = \sqrt{K_i^2 + H_i^2}$$
+归一化权重：
+$$w_i = \frac{\exp(-\lambda g_i)}{\sum_j \exp(-\lambda g_j)}$$
+自适应噪声强度：
+$$\beta_t^{(i)} = \beta_t \cdot (1 - \alpha w_i + \alpha)$$
+其中 $\alpha \in [0, 1]$ 控制自适应程度。</p>
+<p>为保持全局噪声水平，需要满足：
+$$\frac{1}{N}\sum_i \beta_t^{(i)} = \beta_t$$
+这可以通过调整归一化因子实现：
+$$\beta_t^{(i)} = \beta_t \cdot N \cdot w_i$$
+实际应用时，可以对每个局部patch计算平均权重，避免顶点级别的过度细化。</p>
+</details>
+<p><strong>练习13.6</strong> Classifier-free引导的最优权重
+分析classifier-free引导中权重 $w$ 对生成质量和多样性的影响，推导最优权重的理论界限。</p>
+<p><em>Hint</em>：考虑引导强度与KL散度的关系。</p>
+<details>
+<summary>答案</summary>
+<p>Classifier-free引导的有效score：
+$$\tilde{s} = (1+w)s_{cond} - ws_{uncond} = s_{uncond} + (1+w)(s_{cond} - s_{uncond})$$
+这等价于从修改后的分布采样：
+$$\tilde{p}(x|y) \propto p(x)p(y|x)^{1+w}$$
+KL散度分析：
+$$KL(\tilde{p} || p_{true}) = (1+w)E_{\tilde{p}}[\log p(y|x)] - \log Z_w$$
+最优权重满足：
+$$\frac{\partial KL}{\partial w} = E_{\tilde{p}}[\log p(y|x)] - \frac{\partial \log Z_w}{\partial w} = 0$$
+实践中的经验范围：</p>
+<ul>
+<li>$w \in [0.5, 3.0]$：平衡质量和多样性</li>
+<li>$w &gt; 3.0$：高质量但可能过拟合条件</li>
+<li>$w &lt; 0.5$：保持多样性但条件遵循度降低</li>
+</ul>
+<p>理论上界：$w_{max} = \frac{\log p_{max} - \log p_{mean}}{\sigma_{log p}}$，
+其中 $p_{max}, p_{mean}, \sigma_{log p}$ 是条件概率的统计量。</p>
+</details>
+<p><strong>练习13.7</strong> 拓扑保持的扩散采样
+设计一个保持网格拓扑不变的扩散采样算法。要求：</p>
+<ol>
+<li>防止自相交</li>
+<li>保持亏格不变</li>
+<li>给出算法伪代码</li>
+</ol>
+<p><em>Hint</em>：使用投影方法和拓扑检查。</p>
+<details>
+<summary>答案</summary>
+<p>算法：拓扑保持扩散采样</p>
+<div class="codehilite"><pre><span></span><code><span class="nl">输入</span><span class="p">:</span><span class="w"> </span><span class="n">初始噪声</span><span class="w"> </span><span class="n">x_T</span><span class="p">,</span><span class="w"> </span><span class="n">训练好的</span><span class="w"> </span><span class="n">ε_θ</span><span class="p">,</span><span class="w"> </span><span class="n">目标拓扑</span><span class="w"> </span><span class="n">T_target</span>
+<span class="nl">输出</span><span class="p">:</span><span class="w"> </span><span class="n">生成的网格</span><span class="w"> </span><span class="n">x_0</span>
+
+<span class="k">for</span><span class="w"> </span><span class="n">t</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">T</span><span class="w"> </span><span class="k">to</span><span class="w"> </span><span class="mi">1</span><span class="err">:</span>
+<span class="w">    </span><span class="err">#</span><span class="w"> </span><span class="n">标准扩散步骤</span>
+<span class="w">    </span><span class="n">ε</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ε_θ</span><span class="p">(</span><span class="n">x_t</span><span class="p">,</span><span class="w"> </span><span class="n">t</span><span class="p">)</span>
+<span class="w">    </span><span class="n">x</span><span class="err">̂</span><span class="n">_0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">x_t</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="err">√</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">ᾱ_t</span><span class="p">)</span><span class="n">ε</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="err">√</span><span class="n">ᾱ_t</span>
+<span class="w">    </span><span class="n">x_</span><span class="err">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="err">}</span><span class="o">^</span><span class="err">{</span><span class="n">raw</span><span class="err">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sample_step</span><span class="p">(</span><span class="n">x_t</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="err">̂</span><span class="n">_0</span><span class="p">,</span><span class="w"> </span><span class="n">t</span><span class="p">)</span>
+
+<span class="w">    </span><span class="err">#</span><span class="w"> </span><span class="n">拓扑修正</span>
+<span class="w">    </span><span class="n">x_</span><span class="err">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="err">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x_</span><span class="err">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="err">}</span><span class="o">^</span><span class="err">{</span><span class="n">raw</span><span class="err">}</span>
+
+<span class="w">    </span><span class="err">#</span><span class="w"> </span><span class="mf">1.</span><span class="w"> </span><span class="n">防止自相交</span>
+<span class="w">    </span><span class="n">intersections</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">detect_self_intersections</span><span class="p">(</span><span class="n">x_</span><span class="err">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="err">}</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nl">intersections</span><span class="p">:</span>
+<span class="w">        </span><span class="n">x_</span><span class="err">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="err">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">resolve_intersections</span><span class="p">(</span><span class="n">x_</span><span class="err">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="err">}</span><span class="p">,</span><span class="w"> </span><span class="n">intersections</span><span class="p">)</span>
+
+<span class="w">    </span><span class="err">#</span><span class="w"> </span><span class="mf">2.</span><span class="w"> </span><span class="n">边长约束</span><span class="err">（</span><span class="n">防止退化</span><span class="err">）</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="n">edge</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="err">:</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="o">||</span><span class="n">x_</span><span class="err">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="err">}</span><span class="o">[</span><span class="n">i</span><span class="o">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">x_</span><span class="err">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="err">}</span><span class="o">[</span><span class="n">j</span><span class="o">]||</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="nl">ε_min</span><span class="p">:</span>
+<span class="w">            </span><span class="n">x_</span><span class="err">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="err">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">project_to_min_edge_length</span><span class="p">(</span><span class="n">x_</span><span class="err">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="err">}</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">j</span><span class="p">)</span>
+
+<span class="w">    </span><span class="err">#</span><span class="w"> </span><span class="mf">3.</span><span class="w"> </span><span class="n">拓扑检查</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="n">compute_genus</span><span class="p">(</span><span class="n">x_</span><span class="err">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="err">}</span><span class="p">)</span><span class="w"> </span><span class="err">≠</span><span class="w"> </span><span class="n">T_target</span><span class="p">.</span><span class="nl">genus</span><span class="p">:</span>
+<span class="w">        </span><span class="n">x_</span><span class="err">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="err">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">project_to_topology_preserving_space</span><span class="p">(</span><span class="n">x_</span><span class="err">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="err">}</span><span class="p">,</span><span class="w"> </span><span class="n">x_t</span><span class="p">)</span>
+
+<span class="w">    </span><span class="err">#</span><span class="w"> </span><span class="mf">4.</span><span class="w"> </span><span class="n">平滑投影</span><span class="err">（</span><span class="n">可选</span><span class="err">）</span>
+<span class="w">    </span><span class="n">x_</span><span class="err">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="err">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">λ</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x_</span><span class="err">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="err">}</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">λ</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">smooth_laplacian</span><span class="p">(</span><span class="n">x_</span><span class="err">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="err">}</span><span class="p">)</span>
+
+<span class="k">return</span><span class="w"> </span><span class="n">x_0</span>
+</code></pre></div>
+
+<p>关键函数实现思路：</p>
+<ul>
+<li><code>detect_self_intersections</code>: 使用BVH加速的三角形相交测试</li>
+<li><code>resolve_intersections</code>: 通过局部顶点位移消除相交</li>
+<li><code>project_to_topology_preserving_space</code>: 最小化 ||x - x_raw||² 同时保持拓扑</li>
+<li><code>smooth_laplacian</code>: 应用拉普拉斯平滑但保持特征</li>
+</ul>
+</details>
+<p><strong>练习13.8</strong> 多尺度扩散模型
+设计一个多分辨率的3D网格扩散模型，能够逐步细化几何细节。</p>
+<p><em>Hint</em>：考虑金字塔结构和渐进式生成。</p>
+<details>
+<summary>答案</summary>
+<p>多尺度扩散架构：</p>
+<ol>
+<li><strong>网格层次构建</strong>：
+   - Level 0: 粗网格 (如100顶点)
+   - Level 1: 中等网格 (如500顶点)<br />
+   - Level 2: 精细网格 (如2000顶点)</li>
+</ol>
+<p>使用QEM简化或细分得到不同层级。</p>
+<ol start="2">
+<li><strong>分层扩散过程</strong>：</li>
+</ol>
+<div class="codehilite"><pre><span></span><code><span class="gh">#</span> 从粗到细生成
+x_0^{(0)} ~ p_θ₀(x)  # 生成粗网格
+
+for level = 1 to L:
+    # 上采样
+    x_init^{(level)} = upsample(x_0^{(level-1)})
+
+    # 条件扩散
+    x_T^{(level)} = x_init^{(level)} + noise
+    x_0^{(level)} ~ p_θₗ(x | x_0^{(level-1)})
+</code></pre></div>
+
+<ol start="3">
+<li>
+<p><strong>条件编码</strong>：
+$$\epsilon_\theta^{(l)}(x_t^{(l)}, t, x_0^{(l-1)}) = MLP([x_t^{(l)}, encode(x_0^{(l-1)}), t])$$</p>
+</li>
+<li>
+<p><strong>损失函数</strong>：
+$$\mathcal{L} = \sum_{l=0}^L w_l \mathbb{E}[||\epsilon - \epsilon_\theta^{(l)}(x_t^{(l)}, t, c^{(l-1)})||^2]$$</p>
+</li>
+</ol>
+<p>其中权重 $w_l = 2^l$ 给精细层级更高权重。</p>
+<ol start="5">
+<li><strong>优势</strong>：
+   - 稳定的粗结构
+   - 渐进式细节添加
+   - 计算效率高（粗层级快速收敛）
+   - 可控的细节程度</li>
+</ol>
+</details>
+<h2 id="gotchas">常见陷阱与错误 (Gotchas)</h2>
+<h3 id="1">1. 数值稳定性问题</h3>
+<p><strong>问题</strong>：当 $t \to T$ 时，$\bar{\alpha}_t \to 0$，导致除零或数值不稳定。</p>
+<p><strong>解决方案</strong>：</p>
+<ul>
+<li>使用对数空间计算：$\log \bar{\alpha}_t$ 而非 $\bar{\alpha}_t$</li>
+<li>设置最小值阈值：$\bar{\alpha}_t = \max(\bar{\alpha}_t, 1e-8)$</li>
+<li>重参数化避免直接除法</li>
+</ul>
+<h3 id="2">2. 噪声调度不当</h3>
+<p><strong>问题</strong>：线性调度在3D数据上可能过早破坏结构。</p>
+<p><strong>调试技巧</strong>：</p>
+<ul>
+<li>可视化不同时间步的 $x_t$</li>
+<li>监控信噪比曲线</li>
+<li>使用余弦或sigmoid调度作为起点</li>
+</ul>
+<h3 id="3">3. 条件泄漏</h3>
+<p><strong>问题</strong>：条件信息通过捷径传递，模型未真正学习条件生成。</p>
+<p><strong>检查方法</strong>：</p>
+<ul>
+<li>测试时使用未见过的条件</li>
+<li>检查无条件生成质量</li>
+<li>分析中间激活的条件依赖性</li>
+</ul>
+<h3 id="4">4. 采样速度与质量权衡</h3>
+<p><strong>错误做法</strong>：盲目减少采样步数。</p>
+<p><strong>正确做法</strong>：</p>
+<ul>
+<li>使用DDIM等确定性采样器</li>
+<li>实现自适应步长</li>
+<li>考虑知识蒸馏到few-step模型</li>
+</ul>
+<h3 id="5-3d">5. 3D旋转等变性</h3>
+<p><strong>问题</strong>：生成的3D形状对输入方向敏感。</p>
+<p><strong>解决方案</strong>：</p>
+<ul>
+<li>数据增强：训练时随机旋转</li>
+<li>使用SO(3)等变网络架构</li>
+<li>正则对齐到标准坐标系</li>
+</ul>
+<h3 id="6">6. 内存爆炸</h3>
+<p><strong>问题</strong>：3D数据维度高，批量训练容易OOM。</p>
+<p><strong>优化策略</strong>：</p>
+<ul>
+<li>梯度累积</li>
+<li>混合精度训练</li>
+<li>分patch处理大网格</li>
+</ul>
+<h3 id="7">7. 评估指标误导</h3>
+<p><strong>陷阱</strong>：Chamfer距离低不代表视觉质量好。</p>
+<p><strong>全面评估</strong>：</p>
+<ul>
+<li>多个指标组合</li>
+<li>人工评估</li>
+<li>下游任务性能</li>
+</ul>
+<h3 id="8">8. 模式坍塌</h3>
+<p><strong>症状</strong>：生成样本缺乏多样性。</p>
+<p><strong>诊断与修复</strong>：</p>
+<ul>
+<li>检查KL散度</li>
+<li>调整噪声调度</li>
+<li>使用更强的正则化</li>
+</ul>
+            </article>
+            
+            <nav class="page-nav"><a href="chapter12.html" class="nav-link prev">← 第12章：序列生成方法</a><a href="chapter14.html" class="nav-link next">第14章：文本/图像驱动的3D生成 →</a></nav>
+        </main>
+    </div>
+</body>
+</html>
